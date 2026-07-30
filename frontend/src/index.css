@@ -1,0 +1,20 @@
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+@layer base {
+  body {
+    @apply antialiased text-slate-800 bg-slate-50;
+  }
+  h1, h2, h3, h4, h5, h6 { 
+    @apply font-serif; 
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/60 backdrop-blur-lg border border-white/20 shadow-lg;
+  }
+  .animation-delay-200 {
+    animation-delay: 200ms;
+  }
+}
