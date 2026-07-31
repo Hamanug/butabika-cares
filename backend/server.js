@@ -1,4 +1,5 @@
 require('dotenv').config();
+process.env.TZ = 'Africa/Kampala';
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
@@ -7,7 +8,7 @@ const jwt = require('jsonwebtoken');
 const axios = require('axios');
 const path = require('path');
 const db = require('./db');
-require('./cron/reminders');
+require('./services/cronService');
 
 // Auto-migrate appointments table
 db.query(`
@@ -44,6 +45,12 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_change_me';
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/appointments', require('./routes/appointments'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/screenings', require('./routes/screenings'));
+app.use('/api/journal', require('./routes/journal'));
+app.use('/api/messages', require('./routes/messages'));
+app.use('/api/patient', require('./routes/patient'));
+app.use('/api/therapists', require('./routes/therapists'));
 
 
 // Route: Get Current Session (Me)

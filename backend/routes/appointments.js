@@ -131,18 +131,16 @@ router.post('/complete/:id', authenticate, async (req, res) => {
   }
 });
 
-// Therapist: Update Notes with Audit Logging
+// Therapist: Update Notes with Audit Logging (Legacy)
 router.put('/notes/:id', authenticate, async (req, res) => {
   if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
   try {
     const { notes } = req.body;
     const apptId = req.params.id;
     
-    // Get current notes
     const currentRes = await db.query('SELECT notes FROM appointments WHERE id = $1', [apptId]);
     const previousNotes = currentRes.rows[0]?.notes || '';
 
-    // Log the change
     if (previousNotes !== notes) {
       await db.query(
         'INSERT INTO note_audit_logs (appointment_id, therapist_id, previous_notes, new_notes) VALUES ($1, $2, $3, $4)',
@@ -150,12 +148,52 @@ router.put('/notes/:id', authenticate, async (req, res) => {
       );
     }
 
-    // Update the appointment
     await db.query('UPDATE appointments SET notes = $1 WHERE id = $2', [notes, apptId]);
     res.json({ message: 'Notes updated and audited successfully.' });
   } catch (err) { 
     console.error('DB Error:', err);
     res.status(500).json({ error: 'Failed to update notes' }); 
+  }
+});
+
+// Therapist: Save Clinical Notes (Private & Shared)
+router.post('/:id/notes', authenticate, async (req, res) => {
+  if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    const { private_notes, shared_notes } = req.body;
+    const apptId = req.params.id;
+    
+    // Ensure the therapist owns this appointment
+    const checkRes = await db.query('SELECT id FROM appointments WHERE id = $1 AND therapist_id = $2', [apptId, req.user.id]);
+    if (checkRes.rows.length === 0) return res.status(403).json({ error: 'Unauthorized or appointment not found' });
+
+    await db.query(
+      'UPDATE appointments SET private_notes = $1, shared_notes = $2 WHERE id = $3',
+      [private_notes, shared_notes, apptId]
+    );
+    res.json({ message: 'Clinical notes saved successfully.' });
+  } catch (err) {
+    console.error('DB Error:', err);
+    res.status(500).json({ error: 'Failed to save notes' });
+  }
+});
+
+// Patient: Get My Shared Notes
+router.get('/patient/my-notes', authenticate, async (req, res) => {
+  if (req.user.role !== 'patient') return res.status(403).json({ error: 'Unauthorized' });
+  try {
+    // Explicitly stripping out private_notes in SQL by only selecting shared_notes
+    const result = await db.query(`
+      SELECT id, appointment_date, appointment_time, therapist_id, shared_notes 
+      FROM appointments 
+      WHERE patient_id = $1 AND shared_notes IS NOT NULL
+      ORDER BY appointment_date DESC
+    `, [req.user.id]);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('DB Error:', err);
+    res.status(500).json({ error: 'Failed to fetch notes' });
   }
 });
 

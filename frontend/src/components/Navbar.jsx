@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { MessageSquare, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import axios from 'axios';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -10,6 +11,7 @@ const Navbar = () => {
   const isAuthPage = location.pathname === '/auth' || location.pathname === '/therapist/auth';
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -21,6 +23,29 @@ const Navbar = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  useEffect(() => {
+    let intervalId;
+    
+    const fetchUnreadCount = async () => {
+      if (!user) return;
+      try {
+        const res = await axios.get('http://localhost:3000/api/messages/unread-count', { withCredentials: true });
+        setUnreadCount(res.data.count || 0);
+      } catch (err) {
+        console.error('Failed to fetch unread count:', err);
+      }
+    };
+
+    if (user) {
+      fetchUnreadCount();
+      intervalId = setInterval(fetchUnreadCount, 30000);
+    }
+
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [user]);
 
   const getDashboardPath = () => {
     if (!user) return '/auth';
@@ -85,10 +110,14 @@ const Navbar = () => {
         
         {user && (
           <>
-            <Link to="#" className="relative text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center h-9 w-9 rounded-full hover:bg-slate-100 mr-2">
+            <button onClick={() => navigate('/messages')} className="relative text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center h-9 w-9 rounded-full hover:bg-slate-100 mr-2">
               <MessageSquare className="h-5 w-5" />
-              <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">2</span>
-            </Link>
+              {unreadCount > 0 && (
+                <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
             <div className="relative" ref={dropdownRef}>
             <button 
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}

@@ -14,6 +14,7 @@ import Therapists from './pages/Therapists';
 import Dashboard from './pages/Dashboard';
 import Screenings from './pages/Screenings';
 import Exercises from './pages/Exercises';
+import Journal from './pages/Journal';
 import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
@@ -42,6 +43,7 @@ const App = () => {
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/about" element={<About />} />
               <Route path="/resources" element={<Resources />} />
+              <Route path="/journal" element={<Journal />} />
               <Route path="/therapists" element={<Therapists />} />
               <Route
                 path="/dashboard"

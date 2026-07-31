@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BookSessionModal from '../components/BookSessionModal';
 import VideoRoomModal from '../components/VideoRoomModal';
@@ -11,7 +11,22 @@ import {
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [breathingStats, setBreathingStats] = useState({ cycles: 0, lastSession: '—' });
+  const [dashboardStats, setDashboardStats] = useState({ assessmentsCompleted: 0, avgMood: 0, journalEntries: 0 });
+
+  useEffect(() => {
+    const fetchDashboardStats = async () => {
+      try {
+        const res = await axios.get('http://localhost:3000/api/patient/dashboard-stats', { withCredentials: true });
+        setDashboardStats(res.data);
+      } catch (err) {
+        console.error('Failed to fetch dashboard stats', err);
+      }
+    };
+    if (user) fetchDashboardStats();
+  }, [user]);
+
 
   const checkSessionActive = (dateStr, timeStr) => {
     if (!dateStr || !timeStr) return false;
@@ -72,9 +87,8 @@ export default function Dashboard() {
               Track your journey to mental wellbeing with these tools and resources.
             </p>
           </div>
-          <button onClick={() => setIsBookingOpen(true)} className="inline-flex items-center justify-center px-6 py-3 rounded-lg text-sm font-medium transition-colors bg-[#e07a5f] hover:bg-[#d36b51] text-white shadow-sm w-full md:w-auto">
-            <PhoneCall className="h-4 w-4 mr-2" />
-            Speak to a Therapist
+          <button onClick={() => navigate('/therapists')} className="flex items-center gap-2 bg-[#e87a5d] hover:bg-[#d6694c] text-white px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-full md:w-auto">
+            <PhoneCall className="h-4 w-4" /> Speak to a Therapist
           </button>
         </div>
 
@@ -90,7 +104,7 @@ export default function Dashboard() {
                 <h4 className="text-sm font-medium text-slate-700">Mood Tracker</h4>
                 <Heart className="h-5 w-5 text-serene-500" />
               </div>
-              <p className="text-3xl font-semibold text-slate-900">0/5</p>
+              <p className="text-3xl font-semibold text-slate-900">{dashboardStats.avgMood}/5</p>
               <p className="text-sm text-slate-500 mt-1">Average mood • Not enough data</p>
             </div>
 
@@ -101,7 +115,7 @@ export default function Dashboard() {
                 <h4 className="text-sm font-medium text-slate-700">Assessments</h4>
                 <ClipboardList className="h-5 w-5 text-sage-500" />
               </div>
-              <p className="text-3xl font-semibold text-slate-900">0/6</p>
+              <p className="text-3xl font-semibold text-slate-900">{dashboardStats.assessmentsCompleted}/6</p>
               <p className="text-sm text-slate-500 mt-1">Completed • 0 total assessments</p>
             </div>
 
@@ -112,7 +126,7 @@ export default function Dashboard() {
                 <h4 className="text-sm font-medium text-slate-700">Journal Entries</h4>
                 <PenLine className="h-5 w-5 text-warm-500" />
               </div>
-              <p className="text-3xl font-semibold text-slate-900">0</p>
+              <p className="text-3xl font-semibold text-slate-900">{dashboardStats.journalEntries}</p>
               <p className="text-sm text-slate-500 mt-1">Total entries</p>
             </div>
 
@@ -187,7 +201,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Mood Tracker */}
-            <Link to="/mood" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <Link to="/journal" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
               <div className="h-12 w-12 rounded-full bg-serene-50 flex items-center justify-center mb-4 group-hover:bg-serene-100 transition-colors">
                 <Heart className="h-6 w-6 text-serene-600" />
               </div>
@@ -199,7 +213,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Mental Health Screening */}
-            <Link to="/assessments" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <Link to="/screenings" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
               <div className="h-12 w-12 rounded-full bg-sage-50 flex items-center justify-center mb-4 group-hover:bg-sage-100 transition-colors">
                 <ClipboardList className="h-6 w-6 text-sage-600" />
               </div>
@@ -235,7 +249,7 @@ export default function Dashboard() {
             </Link>
 
             {/* Mind Exercises */}
-            <Link to="/mind-exercises" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
+            <Link to="/resources" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
               <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
                 <Brain className="h-6 w-6 text-purple-600" />
               </div>

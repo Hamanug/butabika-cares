@@ -28,7 +28,7 @@ export default function About() {
             Start Your Journey
           </Link>
           <div className="flex justify-center mt-6 w-full">
-            <Link to="#" className="flex items-center gap-2 bg-[#D97757] hover:bg-[#C26243] text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all">
+            <Link to="/therapists" className="flex items-center gap-2 bg-[#D97757] hover:bg-[#C26243] text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all">
               <Phone className="w-5 h-5" /> Speak to a Therapist
             </Link>
           </div>

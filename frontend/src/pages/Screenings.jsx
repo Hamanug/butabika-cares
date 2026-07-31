@@ -108,12 +108,12 @@ const SUICIDE_RISK_OPTIONS = [
 ];
 
 const INSTRUMENTS = {
-  'WHO5': { title: 'WHO-5 Well-Being Index', questions: WHO5_QUESTIONS, options: WHO5_OPTIONS },
-  'GAD7': { title: 'GAD-7 Anxiety', questions: GAD7_QUESTIONS, options: GAD7_OPTIONS },
-  'PHQ9': { title: 'PHQ-9 Depression', questions: PHQ9_QUESTIONS, options: PHQ9_OPTIONS },
-  'PCL5': { title: 'PCL-5 PTSD', questions: PCL5_QUESTIONS, options: PCL5_OPTIONS },
-  'NSSI': { title: 'NSSI Self-Harm', questions: NSSI_QUESTIONS, options: NSSI_OPTIONS },
-  'SUICIDE_RISK': { title: 'Suicide Risk Screen', questions: SUICIDE_RISK_QUESTIONS, options: SUICIDE_RISK_OPTIONS }
+  'WHO5': { title: 'WHO-5 Well-Being Index', description: 'Measures your current mental wellbeing and happiness levels.', time: '2-3 minutes', questions: WHO5_QUESTIONS, options: WHO5_OPTIONS },
+  'GAD7': { title: 'GAD-7 Anxiety', description: 'Screens for signs of generalized anxiety disorder.', time: '3-4 minutes', questions: GAD7_QUESTIONS, options: GAD7_OPTIONS },
+  'PHQ9': { title: 'PHQ-9 Depression', description: 'Assesses the severity of depression symptoms.', time: '3-5 minutes', questions: PHQ9_QUESTIONS, options: PHQ9_OPTIONS },
+  'PCL5': { title: 'PCL-5 PTSD', description: 'Measures symptoms of Post-Traumatic Stress Disorder.', time: '5-10 minutes', questions: PCL5_QUESTIONS, options: PCL5_OPTIONS },
+  'NSSI': { title: 'NSSI Self-Harm', description: 'Evaluates risk and history of non-suicidal self-injury.', time: '1-2 minutes', questions: NSSI_QUESTIONS, options: NSSI_OPTIONS },
+  'SUICIDE_RISK': { title: 'Suicide Risk Screen', description: 'Screens for current and past risk of self-harm.', time: '1-2 minutes', questions: SUICIDE_RISK_QUESTIONS, options: SUICIDE_RISK_OPTIONS }
 };
 
 export default function Screenings() {
@@ -182,13 +182,27 @@ export default function Screenings() {
                 <div 
                   key={key}
                   onClick={() => startTest(key)}
-                  className="cursor-pointer border border-slate-200 rounded-lg p-5 hover:bg-blue-50 hover:border-blue-200 transition-colors"
+                  className="cursor-pointer border border-slate-200 rounded-xl p-5 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50 hover:border-blue-200 transition-all group shadow-sm hover:shadow-md"
                 >
-                  <ClipboardList className="h-6 w-6 text-blue-600 mb-3" />
-                  <h3 className="font-semibold text-slate-800">{instrument.title}</h3>
-                  <p className="text-sm text-slate-500 mt-1">{instrument.questions.length} questions</p>
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="bg-blue-100 p-2 rounded-lg group-hover:bg-blue-200 transition-colors">
+                      <ClipboardList className="h-5 w-5 text-blue-700" />
+                    </div>
+                    <h3 className="font-semibold text-slate-800 text-lg">{instrument.title}</h3>
+                  </div>
+                  <p className="text-sm text-slate-600 mb-4 h-10 line-clamp-2">{instrument.description}</p>
+                  <p className="text-xs font-medium text-slate-500 bg-slate-100 inline-block px-2 py-1 rounded-md group-hover:bg-white transition-colors">
+                    {instrument.questions.length} questions • {instrument.time}
+                  </p>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-8 bg-slate-50 border border-slate-200 rounded-lg p-4 flex gap-3 items-start">
+              <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+              <p className="text-sm text-slate-600">
+                <span className="font-semibold text-slate-800">Important Note:</span> These assessments are for screening purposes only and are not a substitute for professional diagnosis or treatment. All responses are private and stored only on your device.
+              </p>
             </div>
           </div>
         )}
