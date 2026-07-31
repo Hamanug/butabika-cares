@@ -22,6 +22,13 @@ const Navbar = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  const getDashboardPath = () => {
+    if (!user) return '/auth';
+    if (user.role === 'admin') return '/admin/dashboard';
+    if (user.role === 'therapist') return '/therapist/dashboard';
+    return '/dashboard'; // Default to patient
+  };
+
   const getAvatarText = () => {
     if (user?.name) {
       const parts = user.name.split(' ').filter(Boolean);
@@ -47,7 +54,7 @@ const Navbar = () => {
           <Link to="/about" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">About</Link>
           <Link to="/resources" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Resources</Link>
           <Link to="/therapists" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Therapists</Link>
-          {user && <Link to="/dashboard" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
+          {user && <Link to={getDashboardPath()} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
         </div>
       </div>
 
@@ -149,7 +156,7 @@ const Navbar = () => {
           <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">About</Link>
           <Link to="/resources" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Resources</Link>
           <Link to="/therapists" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Therapists</Link>
-          {user && <Link to="/dashboard" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
+          {user && <Link to={getDashboardPath()} onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
           <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mt-6 pt-4 border-t border-slate-100 mb-4">Supported By</div>
           <div className="flex items-center justify-center gap-4">
             <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer"><img src="/catalonia.png" alt="Catalonia" className="h-6 w-auto object-contain" /></a>

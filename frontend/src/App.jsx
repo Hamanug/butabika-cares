@@ -6,12 +6,13 @@ import TherapistDashboard from './pages/TherapistDashboard';
 import Auth from './pages/Auth';
 
 import TherapistAuth from './pages/TherapistAuth';
-import AdminLogin from './pages/AdminLogin';
-import AdminDashboard from './pages/AdminDashboard';
+import AdminAuth from './pages/admin/AdminAuth.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 import About from './pages/About';
 import Resources from './pages/Resources';
 import Therapists from './pages/Therapists';
 import Dashboard from './pages/Dashboard';
+import Screenings from './pages/Screenings';
 import Exercises from './pages/Exercises';
 import Profile from './pages/Profile';
 import Navbar from './components/Navbar';
@@ -37,35 +38,43 @@ const App = () => {
               <Route path="/" element={<Home />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/therapist/auth" element={<TherapistAuth />} />
-              <Route path="/admin/login" element={<AdminLogin />} />
-              <Route path="/admin/dashboard" element={<RoleRoute allowedRole="admin" redirectTo="/admin/login"><AdminDashboard /></RoleRoute>} />
+              <Route path="/admin/login" element={<AdminAuth />} />
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/about" element={<About />} />
               <Route path="/resources" element={<Resources />} />
               <Route path="/therapists" element={<Therapists />} />
-              <Route 
-                path="/dashboard" 
+              <Route
+                path="/dashboard"
                 element={
                   <ProtectedRoute>
                     <Dashboard />
                   </ProtectedRoute>
-                } 
+                }
+              />
+              <Route
+                path="/screenings"
+                element={
+                  <ProtectedRoute>
+                    <Screenings />
+                  </ProtectedRoute>
+                }
               />
               <Route path="/exercises" element={<Exercises />} />
-              <Route 
-                path="/therapist/dashboard" 
+              <Route
+                path="/therapist/dashboard"
                 element={
                   <RoleRoute allowedRole="therapist" redirectTo="/therapist/auth">
                     <TherapistDashboard />
                   </RoleRoute>
-                } 
+                }
               />
-              <Route 
-                path="/profile" 
+              <Route
+                path="/profile"
                 element={
                   <ProtectedRoute>
                     <Profile />
                   </ProtectedRoute>
-                } 
+                }
               />
             </Routes>
           </main>
