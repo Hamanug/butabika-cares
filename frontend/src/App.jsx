@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { SocketProvider } from './context/SocketContext';
 import Home from './pages/Home';
 import TherapistDashboard from './pages/TherapistDashboard';
 import Auth from './pages/Auth';
@@ -16,6 +17,9 @@ import Screenings from './pages/Screenings';
 import Exercises from './pages/Exercises';
 import Journal from './pages/Journal';
 import Profile from './pages/Profile';
+import Messages from './pages/Messages';
+import CognitiveReframing from './pages/CognitiveReframing';
+import SleepHygiene from './pages/SleepHygiene';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import RoleRoute from './components/RoleRoute';
@@ -31,9 +35,10 @@ const ProtectedRoute = ({ children }) => {
 const App = () => {
   return (
     <AuthProvider>
-      <BrowserRouter>
-        <div className="min-h-screen flex flex-col bg-slate-50">
-          <Navbar />
+      <SocketProvider>
+        <BrowserRouter>
+          <div className="min-h-screen flex flex-col bg-slate-50">
+            <Navbar />
           <main className="flex-grow">
             <Routes>
               <Route path="/" element={<Home />} />
@@ -62,6 +67,8 @@ const App = () => {
                 }
               />
               <Route path="/exercises" element={<Exercises />} />
+              <Route path="/cognitive-reframing" element={<CognitiveReframing />} />
+              <Route path="/sleep-hygiene" element={<SleepHygiene />} />
               <Route
                 path="/therapist/dashboard"
                 element={
@@ -78,11 +85,20 @@ const App = () => {
                   </ProtectedRoute>
                 }
               />
+              <Route
+                path="/messages"
+                element={
+                  <ProtectedRoute>
+                    <Messages />
+                  </ProtectedRoute>
+                }
+              />
             </Routes>
           </main>
           <Footer />
         </div>
       </BrowserRouter>
+      </SocketProvider>
     </AuthProvider>
   );
 };

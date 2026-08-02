@@ -89,17 +89,17 @@ const Home = () => {
               <h3 className="text-lg font-medium mb-2 text-cyan-700">Breathing Exercises</h3>
               <p className="text-slate-600 text-sm">Practice guided breathing techniques to reduce anxiety and promote relaxation.</p>
             </div>
-            <div className="rounded-xl p-6 transition-all duration-300 h-full bg-fuchsia-100 hover:bg-fuchsia-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
+            <div onClick={() => navigate('/journal')} className="rounded-xl p-6 transition-all duration-300 h-full bg-fuchsia-100 hover:bg-fuchsia-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
               <div className="text-3xl mb-4">📊</div>
               <h3 className="text-lg font-medium mb-2 text-fuchsia-700">Mood Tracking</h3>
               <p className="text-slate-600 text-sm">Record your daily moods and journal your thoughts to identify patterns and gain insights.</p>
             </div>
-            <div className="rounded-xl p-6 transition-all duration-300 h-full bg-indigo-100 hover:bg-indigo-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
+            <div onClick={() => navigate('/screenings')} className="rounded-xl p-6 transition-all duration-300 h-full bg-indigo-100 hover:bg-indigo-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
               <div className="text-3xl mb-4">📋</div>
               <h3 className="text-lg font-medium mb-2 text-indigo-700">Mental Health Screening</h3>
               <p className="text-slate-600 text-sm">Evidence-based screening tools to better understand your mental health and wellbeing.</p>
             </div>
-            <div className="rounded-xl p-6 transition-all duration-300 h-full bg-amber-100 hover:bg-amber-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
+            <div onClick={() => navigate('/resources')} className="rounded-xl p-6 transition-all duration-300 h-full bg-amber-100 hover:bg-amber-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
               <div className="text-3xl mb-4">📚</div>
               <h3 className="text-lg font-medium mb-2 text-amber-700">Health Resources</h3>
               <p className="text-slate-600 text-sm">Access our collection of mental health resources, articles, and helpful techniques.</p>

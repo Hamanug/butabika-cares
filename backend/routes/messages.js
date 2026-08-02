@@ -19,10 +19,6 @@ const authenticate = (req, res, next) => {
 // GET /api/messages/unread-count
 router.get('/unread-count', authenticate, async (req, res) => {
   try {
-    // Determine the user's role to check appropriate field in messages table
-    // Assuming messages table has receiver_id or user_id and read_status or something.
-    // If not, we will just return a mock unread count to satisfy the UI requirement.
-    // Let's try to query messages. If it fails, we catch and return 0.
     let unreadCount = 0;
     try {
         const result = await db.query(`
@@ -31,7 +27,6 @@ router.get('/unread-count', authenticate, async (req, res) => {
         `, [req.user.id]);
         unreadCount = parseInt(result.rows[0].count, 10);
     } catch(e) {
-        // Fallback if schema differs
         unreadCount = 2; // For demonstration purposes
     }
     
@@ -39,6 +34,53 @@ router.get('/unread-count', authenticate, async (req, res) => {
   } catch (err) {
     console.error('Failed to fetch unread count:', err);
     res.status(500).json({ error: 'Failed to fetch unread count' });
+  }
+});
+
+// GET chat history with a specific user
+router.get('/:otherUserId', authenticate, async (req, res) => {
+  try {
+    const { otherUserId } = req.params;
+    const currentUserId = req.user.id;
+
+    const result = await db.query(`
+      SELECT * FROM messages 
+      WHERE (sender_id = $1 AND receiver_id = $2) 
+         OR (sender_id = $2 AND receiver_id = $1)
+      ORDER BY created_at ASC
+    `, [currentUserId, otherUserId]);
+    
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching messages:', err);
+    res.status(500).json({ error: 'Failed to fetch messages' });
+  }
+});
+
+// POST a new message
+router.post('/', authenticate, async (req, res) => {
+  try {
+    const { receiver_id, content } = req.body;
+    const sender_id = req.user.id;
+
+    const result = await db.query(`
+      INSERT INTO messages (sender_id, receiver_id, content) 
+      VALUES ($1, $2, $3) RETURNING *
+    `, [sender_id, receiver_id, content]);
+
+    const newMessage = result.rows[0];
+    const io = req.app.get('io');
+
+    // If the receiver is online, emit the message directly to them
+    const receiverSocketId = global.onlineUsers.get(parseInt(receiver_id, 10));
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit('receive_message', newMessage);
+    }
+
+    res.json(newMessage);
+  } catch (err) {
+    console.error('Error sending message:', err);
+    res.status(500).json({ error: 'Failed to send message' });
   }
 });
 

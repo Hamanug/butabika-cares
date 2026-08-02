@@ -31,17 +31,17 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
       await axios.post(`http://localhost:3000/api/appointments/complete/${appointment.id}`, { notes }, { withCredentials: true });
       if (onSessionEnded) onSessionEnded();
       onClose();
-    } catch (err) { 
-      alert('Failed to save session notes'); 
-    } finally { 
-      setEnding(false); 
+    } catch (err) {
+      alert('Failed to save session notes');
+    } finally {
+      setEnding(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4">
       <div className="bg-slate-900 rounded-2xl max-w-5xl w-full p-6 shadow-2xl border border-slate-800 flex flex-col h-[85vh]">
-        
+
         {/* Header */}
         <div className="flex justify-between items-center pb-4 border-b border-slate-800">
           <div className="flex items-center gap-3">
@@ -58,10 +58,10 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
 
         {/* Video Frame */}
         <div className="flex-1 my-4 rounded-xl overflow-hidden bg-black relative border border-slate-800">
-          <iframe 
-            src={appointment.meeting_link} 
+          <iframe
+            src={appointment.meeting_link}
             title="Butabika Teletherapy Session"
-            allow="camera; microphone; display-capture; autoplay; encrypted-media;" 
+            allow="camera; microphone; display-capture; autoplay; encrypted-media;"
             className="w-full h-full border-0"
           />
         </div>
@@ -69,15 +69,15 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
         {/* Therapist Controls & Notes Drawer */}
         {isTherapist ? (
           <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row gap-4 items-center">
-            <textarea 
-              rows="2" 
-              value={notes} 
-              onChange={e => setNotes(e.target.value)} 
-              placeholder="Add private clinical session notes here..." 
+            <textarea
+              rows="2"
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Add private clinical session notes here..."
               className="flex-1 bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-warm-500"
             />
-            <button 
-              onClick={handleComplete} 
+            <button
+              onClick={handleComplete}
               disabled={ending}
               className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
             >

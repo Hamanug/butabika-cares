@@ -4,8 +4,8 @@ import axios from 'axios';
 import BookSessionModal from '../components/BookSessionModal';
 import VideoRoomModal from '../components/VideoRoomModal';
 import { useAuth } from '../context/AuthContext';
-import { 
-  Heart, ClipboardList, PenLine, Activity, 
+import {
+  Heart, ClipboardList, PenLine, Activity,
   BookOpen, Brain, PhoneCall, Calendar
 } from 'lucide-react';
 
@@ -28,6 +28,14 @@ export default function Dashboard() {
   }, [user]);
 
 
+  const formatDisplayDate = (dateStr) => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-UG', { 
+      weekday: 'short', month: 'short', day: 'numeric' 
+    });
+  };
+
   const checkSessionActive = (dateStr, timeStr) => {
     if (!dateStr || !timeStr) return false;
     try {
@@ -35,11 +43,11 @@ export default function Dashboard() {
       let [hours, minutes] = time.split(':');
       if (hours === '12') hours = '00';
       if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
-      
+
       const sessionStart = new Date(`${dateStr.split('T')[0]}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
       const now = new Date();
       const diffMins = (now - sessionStart) / 1000 / 60;
-      
+
       // Session is active 5 mins before and expires 60 mins after
       return diffMins >= -5 && diffMins <= 60;
     } catch (e) { return false; }
@@ -76,7 +84,7 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-serene-50 to-white pt-32 pb-20">
       <div className="container max-w-5xl mx-auto px-4">
-        
+
         {/* Header & Main CTA */}
         <div className="mb-12 text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
@@ -96,7 +104,7 @@ export default function Dashboard() {
         <div className="mb-12">
           <h3 className="text-xl font-medium mb-6 text-slate-900">Your Wellness Journey</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            
+
             {/* Mood Tracker */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-serene-300"></div>
@@ -154,7 +162,7 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Calendar className="w-4 h-4 text-[#e07a5f]" />
-                      <span className="font-medium text-slate-900">{session.appointment_date} at {session.appointment_time}</span>
+                      <span className="font-medium text-slate-900">{formatDisplayDate(session.appointment_date)} at {session.appointment_time}</span>
                     </div>
                     <p className="text-sm text-slate-500">
                       {session.status === 'pending' ? 'Waiting for a therapist to accept...' : `with Dr. ${session.other_first} ${session.other_last}`}
@@ -162,7 +170,7 @@ export default function Dashboard() {
                   </div>
                   {session.status === 'scheduled' && (
                     checkSessionActive(session.appointment_date, session.appointment_time) ? (
-                      <button 
+                      <button
                         onClick={() => { setActiveSession(session); setIsVideoOpen(true); }}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                       >
@@ -187,7 +195,7 @@ export default function Dashboard() {
         <div>
           <h3 className="text-xl font-medium mb-6 text-slate-900">Continue your journey</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            
+
             {/* Breathing Exercises */}
             <Link to="/exercises" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
               <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
@@ -265,16 +273,16 @@ export default function Dashboard() {
 
       </div>
 
-      <BookSessionModal 
-        isOpen={isBookingOpen} 
-        onClose={() => setIsBookingOpen(false)} 
-        onSuccess={fetchSessions} 
+      <BookSessionModal
+        isOpen={isBookingOpen}
+        onClose={() => setIsBookingOpen(false)}
+        onSuccess={fetchSessions}
       />
-      
-      <VideoRoomModal 
-        isOpen={isVideoOpen} 
-        onClose={() => setIsVideoOpen(false)} 
-        appointment={activeSession} 
+
+      <VideoRoomModal
+        isOpen={isVideoOpen}
+        onClose={() => setIsVideoOpen(false)}
+        appointment={activeSession}
         isTherapist={false}
         onSessionEnded={fetchSessions}
       />

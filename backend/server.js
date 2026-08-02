@@ -1,6 +1,7 @@
 require('dotenv').config();
 process.env.TZ = 'Africa/Kampala';
 const express = require('express');
+const http = require('http');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcrypt');
@@ -82,6 +83,42 @@ app.post('/api/auth/logout', (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
+const server = http.createServer(app);
+
+const { Server } = require('socket.io');
+const io = new Server(server, {
+  cors: { origin: "http://localhost:5173", methods: ["GET", "POST"] }
+});
+
+// Map to track online users: Map<userId, socketId>
+global.onlineUsers = new Map();
+
+io.on('connection', (socket) => {
+  console.log('A user connected:', socket.id);
+
+  // When a user logs in / connects
+  socket.on('register_user', (userId) => {
+    global.onlineUsers.set(userId, socket.id);
+    // Broadcast the updated online users list to everyone
+    io.emit('online_users_update', Array.from(global.onlineUsers.keys()));
+  });
+
+  // Handle disconnection
+  socket.on('disconnect', () => {
+    for (let [userId, socketId] of global.onlineUsers.entries()) {
+      if (socketId === socket.id) {
+        global.onlineUsers.delete(userId);
+        io.emit('online_users_update', Array.from(global.onlineUsers.keys()));
+        break;
+      }
+    }
+    console.log('User disconnected:', socket.id);
+  });
+});
+
+// Attach io to the app so routes can use it
+app.set('io', io);
+
+server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });

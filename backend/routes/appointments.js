@@ -20,11 +20,21 @@ const authenticate = (req, res, next) => {
 // Patient: Book Appointment
 router.post('/book', authenticate, async (req, res) => {
   try {
-    const { appointment_date, appointment_time, therapist_id } = req.body;
+    const { appointment_date, appointment_time, therapist_id, notes } = req.body;
+    
+    const existing = await db.query(
+      `SELECT id FROM appointments WHERE patient_id = $1 AND status IN ('pending', 'scheduled', 'accepted')`,
+      [req.user.id]
+    );
+
+    if (existing.rows.length > 0) {
+      return res.status(400).json({ error: 'You already have a pending or scheduled session. Please complete it before booking another.' });
+    }
+
     const result = await db.query(
-      `INSERT INTO appointments (patient_id, therapist_id, appointment_date, appointment_time, status)
-       VALUES ($1, $2, $3, $4, 'pending') RETURNING *`,
-      [req.user.id, therapist_id || null, appointment_date, appointment_time]
+      `INSERT INTO appointments (patient_id, therapist_id, appointment_date, appointment_time, status, notes)
+       VALUES ($1, $2, $3, $4, 'pending', $5) RETURNING *`,
+      [req.user.id, therapist_id || null, appointment_date, appointment_time, notes]
     );
     res.json({ message: 'Appointment requested successfully', appointment: result.rows[0] });
   } catch (err) { 

@@ -107,7 +107,28 @@ const SUICIDE_RISK_OPTIONS = [
   { label: "Yes", value: 1 }
 ];
 
+const AGREEABLENESS_QUESTIONS = [
+  "I sympathize with others' feelings.",
+  "I insult people.",
+  "I respect others.",
+  "I take time out for others.",
+  "I feel little concern for others.",
+  "I make people feel at ease.",
+  "I am not interested in other people's problems.",
+  "I have a good word for everyone.",
+  "I am indifferent to the feelings of others.",
+  "I inquire about others' well-being."
+];
+const AGREEABLENESS_OPTIONS = [
+  { label: "Strongly Disagree", value: 1 },
+  { label: "Disagree", value: 2 },
+  { label: "Neutral", value: 3 },
+  { label: "Agree", value: 4 },
+  { label: "Strongly Agree", value: 5 }
+];
+
 const INSTRUMENTS = {
+  'AGREEABLENESS': { title: 'Agreeableness Trait', description: 'Assesses agreeableness based on the Big Five personality traits.', time: '2-3 minutes', questions: AGREEABLENESS_QUESTIONS, options: AGREEABLENESS_OPTIONS },
   'WHO5': { title: 'WHO-5 Well-Being Index', description: 'Measures your current mental wellbeing and happiness levels.', time: '2-3 minutes', questions: WHO5_QUESTIONS, options: WHO5_OPTIONS },
   'GAD7': { title: 'GAD-7 Anxiety', description: 'Screens for signs of generalized anxiety disorder.', time: '3-4 minutes', questions: GAD7_QUESTIONS, options: GAD7_OPTIONS },
   'PHQ9': { title: 'PHQ-9 Depression', description: 'Assesses the severity of depression symptoms.', time: '3-5 minutes', questions: PHQ9_QUESTIONS, options: PHQ9_OPTIONS },
@@ -141,10 +162,21 @@ export default function Screenings() {
       setCurrentStep(prev => prev + 1);
     } else {
       // Calculate Score
-      let score = Object.values(answers).reduce((acc, curr) => acc + curr, 0);
-      
-      if (activeTest === 'WHO5') {
-        score = score * 4;
+      let score = 0;
+      if (activeTest === 'AGREEABLENESS') {
+        const reverseIndices = [1, 4, 6, 8];
+        Object.entries(answers).forEach(([idx, val]) => {
+          if (reverseIndices.includes(parseInt(idx))) {
+            score += (6 - val);
+          } else {
+            score += val;
+          }
+        });
+      } else {
+        score = Object.values(answers).reduce((acc, curr) => acc + curr, 0);
+        if (activeTest === 'WHO5') {
+          score = score * 4;
+        }
       }
       
       setFinalScore(score);

@@ -55,7 +55,7 @@ export default function Resources() {
           </div>
 
           {/* Sleep Hygiene */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow group">
+          <div onClick={() => navigate('/sleep-hygiene')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow group cursor-pointer">
             <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
               <Moon className="w-6 h-6 text-indigo-600" />
             </div>
@@ -69,7 +69,7 @@ export default function Resources() {
           </div>
 
           {/* Cognitive Reframing */}
-          <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow group">
+          <div onClick={() => navigate('/cognitive-reframing')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow group cursor-pointer">
             <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
               <Brain className="w-6 h-6 text-purple-600" />
             </div>
