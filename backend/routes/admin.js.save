@@ -1,0 +1,27 @@
+{ error: 'Internal server error' });
+  }
+});
+// POST /api/admin/therapists
+router.post('/therapists', async (req, res) => {
+  try {
+    const { first_name, last_name, email, phone_number, password, specialization, credentials } = req.body;
+    
+    // Hash password
+    const passwordHash = await bcrypt.hash(password, 10);
+    
+    // Insert into flattened users table
+    const userRes = await db.query(`
+      INSERT INTO users (email, phone_number, first_name, last_name, role, password_hash, bio, occupation)
+      VALUES ($1, $2, $3, $4, 'therapist', $5, $6, $7)
+      RETURNING id, email, first_name, last_name
+    `, [email, phone_number, first_name, last_name, passwordHash, credentials, specialization]);
+    
+    const userId = userRes.rows[0].id;
+    
+    // Assign role
+    await db.query(`INSERT INTO user_roles (user_id, role_name) VALUES ($1, 'therapist')`, [userId]);
+    
+    res.json({ message: 'Therapist onboarded successfully', therapist: userRes.rows[0] });
+  } catch (error) {
+    console.error('Failed to onboard therapist:', error);
+    res.status(500).json({ error: 'F
