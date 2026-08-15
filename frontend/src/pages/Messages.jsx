@@ -18,32 +18,9 @@ export default function Messages() {
   useEffect(() => {
     const fetchContacts = async () => {
       try {
-        const endpoint = user?.role === 'therapist' 
-          ? `${import.meta.env.VITE_API_URL}/api/appointments/my-sessions` 
-          : `${import.meta.env.VITE_API_URL}/api/therapists/active`;
-        
-        const response = await axios.get(endpoint, { withCredentials: true });
-        
-        let rawUsers = response.data;
-        if (user?.role === 'therapist') {
-            rawUsers = response.data.map(appt => ({
-                ...appt,
-                id: appt.patient_id,
-                first_name: appt.other_first,
-                last_name: appt.other_last
-            }));
-        }
-        
-        const validUsers = rawUsers.filter(u => u && (u.patient_id || u.therapist_id));
-        const uniqueContacts = Array.from(new Map(
-            validUsers.map(u => {
-                const uniqueId = user?.role === 'therapist' ? u.patient_id : u.therapist_id;
-                // Ensure the uniqueId is mapped to the object's core id property for UI rendering
-                return [uniqueId, { ...u, id: uniqueId }];
-            })
-        ).values());
-        
-        setContacts(uniqueContacts);
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/messages/contacts`, { withCredentials: true });
+        // The backend now perfectly structures the data and enforces the rules
+        setContacts(response.data);
       } catch (err) {
         console.error('Failed to load contacts', err);
       } finally {

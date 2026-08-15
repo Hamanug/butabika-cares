@@ -37,6 +37,52 @@ router.get('/unread-count', authenticate, async (req, res) => {
   }
 });
 
+// GET Contact List (Enforces Initiation Rules)
+router.get('/contacts', authenticate, async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const role = req.user.role;
+
+    let query = '';
+    let params = [];
+
+    if (role === 'patient') {
+      // Patients can see all active therapists (handles legacy NULL is_active)
+      query = `
+        SELECT u.id, p.first_name, p.last_name, u.display_id, tp.specialization as specialty, tp.profile_picture,
+        (SELECT COUNT(*) FROM messages m2 WHERE m2.sender_id = u.id AND m2.recipient_id = $1 AND m2.is_read = FALSE)::int as unread_count
+        FROM users u
+        LEFT JOIN profiles p ON u.id = p.user_id
+        LEFT JOIN therapist_profiles tp ON u.id = tp.user_id
+        WHERE u.role = 'therapist' AND (u.is_active = TRUE OR u.is_active IS NULL)
+        ORDER BY p.first_name ASC
+      `;
+      params = [userId]; // Needed to calculate patient's unread_count
+    } else if (role === 'therapist') {
+      // Therapists see patients with active message history.
+      // COALESCE ensures anonymous patients render safely as "Patient [DisplayID]".
+      query = `
+        SELECT DISTINCT u.id, 
+        COALESCE(p.first_name, 'Patient') AS first_name, 
+        COALESCE(p.last_name, u.display_id) AS last_name, 
+        u.display_id,
+        (SELECT COUNT(*) FROM messages m2 WHERE m2.sender_id = u.id AND m2.recipient_id = $1 AND m2.is_read = FALSE)::int as unread_count
+        FROM messages m
+        JOIN users u ON (m.sender_id = u.id OR m.recipient_id = u.id)
+        LEFT JOIN profiles p ON u.id = p.user_id
+        WHERE (m.recipient_id = $1 OR m.sender_id = $1) AND u.id != $1
+      `;
+      params = [userId];
+    }
+
+    const result = await db.query(query, params);
+    res.json(result.rows);
+  } catch (err) {
+    console.error('Error fetching contacts:', err);
+    res.status(500).json({ error: 'Failed to fetch contacts' });
+  }
+});
+
 // GET chat history with a specific user
 router.get('/:otherUserId', authenticate, async (req, res) => {
   try {

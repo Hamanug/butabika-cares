@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BookOpen, User, Loader2, X, PhoneCall } from 'lucide-react';
+import { BookOpen, User, Loader2, X, PhoneCall, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -41,6 +41,12 @@ export default function Therapists() {
   const handleRequestSession = async () => {
     if (!selectedTherapist) return;
     if (!sessionDate || !sessionTime) return toast.error("Please select a date and time.");
+
+    // Strict UI Time Validation
+    const [hours, minutes] = sessionTime.split(':').map(Number);
+    if (hours < 8 || hours >= 20) {
+      return toast.error("Please select a time between 8:00 AM and 8:00 PM.");
+    }
 
     if (!user) {
       const pendingAppointment = {
@@ -169,13 +175,31 @@ export default function Therapists() {
               <div className="flex gap-4 mb-4">
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Date</label>
-                  <input type="date" value={sessionDate} onChange={(e) => setSessionDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" required />
+                  <input 
+                    type="date" 
+                    value={sessionDate} 
+                    onChange={(e) => setSessionDate(e.target.value)} 
+                    min={new Date().toISOString().split('T')[0]} 
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" 
+                    required 
+                  />
                 </div>
                 <div className="flex-1">
                   <label className="block text-sm font-medium text-slate-700 mb-1">Time</label>
-                  <input type="time" value={sessionTime} onChange={(e) => setSessionTime(e.target.value)} className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" required />
+                  <input 
+                    type="time" 
+                    value={sessionTime} 
+                    onChange={(e) => setSessionTime(e.target.value)} 
+                    min="08:00"
+                    max="20:00"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" 
+                    required 
+                  />
                 </div>
               </div>
+              <p className="text-xs text-slate-500 mb-4 font-medium flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Clinical hours are strictly 8:00 AM to 8:00 PM (EAT).
+              </p>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 What would you like to discuss? (Optional)
               </label>

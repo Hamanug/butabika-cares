@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { X, Clock, CheckCircle2, Loader2 } from 'lucide-react';
+import { X, Clock, CheckCircle2, Loader2, PhoneOff } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapist, onSessionEnded }) {
@@ -85,7 +85,7 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
             <div className="flex items-center gap-2 bg-slate-800 text-slate-300 px-3 py-1.5 rounded-full text-sm font-mono border border-slate-700">
               <Clock className="w-4 h-4 text-emerald-400" /> {formatTime(seconds)}
             </div>
-            <button onClick={onClose} className="text-slate-400 hover:text-white"><X className="w-6 h-6" /></button>
+            <button onClick={onClose} className="text-slate-400 hover:text-white ml-2"><X className="w-6 h-6" /></button>
           </div>
         </div>
 
@@ -97,6 +97,18 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
             allow="camera; microphone; display-capture; autoplay; encrypted-media;"
             className="w-full h-full border-0"
           />
+          {/* Mobile-Optimized Patient Footer */}
+          {!isTherapist && (
+            <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-slate-900/90 to-transparent flex justify-center pb-6 z-10">
+              <button
+                onClick={onClose}
+                className="flex items-center gap-2 px-6 py-3 text-sm font-bold text-white bg-red-600 hover:bg-red-700 rounded-full shadow-lg transition-transform active:scale-95"
+              >
+                <PhoneOff className="w-5 h-5" />
+                Leave Session
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Therapist Controls & Notes Drawer */}

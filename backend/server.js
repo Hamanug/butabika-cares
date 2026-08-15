@@ -62,7 +62,7 @@ const profileRoutes = require('./routes/profile');
 const app = express();
 app.use(cors({
   origin: ['http://localhost:5173', 'https://butabikacares.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   credentials: true
 }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));

@@ -94,26 +94,47 @@ router.post('/accept/:id', authenticate, async (req, res) => {
     );
 
     if (apptRes.rows.length === 0) {
-      return res.status(400).json({ error: 'Appointment already claimed by another therapist' });
+      return res.status(400).json({ error: 'Appointment already claimed by another therapist or does not exist.' });
     }
 
     const appt = apptRes.rows[0];
-    const patientRes = await db.query('SELECT phone_number, first_name FROM users WHERE id = $1', [appt.patient_id]);
-    const therapistRes = await db.query('SELECT first_name, last_name FROM users WHERE id = $1', [req.user.id]);
+
+    // Fetch patient and therapist details correctly from profiles table
+    const patientRes = await db.query(`
+      SELECT u.phone_number, p.first_name 
+      FROM users u 
+      LEFT JOIN profiles p ON u.id = p.user_id 
+      WHERE u.id = $1
+    `, [appt.patient_id]);
+
+    const therapistRes = await db.query(`
+      SELECT p.first_name, p.last_name 
+      FROM profiles p 
+      WHERE p.user_id = $1
+    `, [req.user.id]);
 
     const patient = patientRes.rows[0];
     const therapist = therapistRes.rows[0];
-    // Clean up Doctor Name (prevent "Dr. Dr.")
-    const title = therapist.first_name.startsWith('Dr.') ? '' : 'Dr. ';
-    const docName = `${title}${therapist.first_name} ${therapist.last_name || ''}`.trim();
-    
-    // Clean up Date formatting
-    const cleanDate = new Date(appt.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
 
-    // Trigger EgoSMS
+    // Null-safe name formatting
+    const tFirstName = therapist?.first_name || 'Therapist';
+    const tLastName = therapist?.last_name || '';
+    const title = tFirstName.startsWith('Dr.') ? '' : 'Dr. ';
+    const docName = `${title}${tFirstName} ${tLastName}`.trim();
+    
+    // Null-safe Date & Time formatting for legacy data
+    const cleanDate = appt.appointment_date 
+      ? new Date(appt.appointment_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })
+      : 'a scheduled date';
+    const cleanTime = appt.appointment_time || 'TBD';
+
+    // Trigger SMS Notification
     if (patient && patient.phone_number) {
-      const smsMessage = `Butabika Cares: Your session with ${docName} is confirmed for ${cleanDate} at ${appt.appointment_time}. Log in at the scheduled time to join.`;
-      try { await sendGenericSMS(patient.phone_number, smsMessage); } 
+      const smsMessage = `Butabika Cares: Your session with ${docName} is confirmed for ${cleanDate} at ${cleanTime}. Log in at the scheduled time to join.`;
+      try { 
+        const { sendGenericSMS } = require('../services/smsService'); 
+        await sendGenericSMS(patient.phone_number, smsMessage); 
+      } 
       catch (e) { console.error('SMS notification failed:', e.message); }
     }
 

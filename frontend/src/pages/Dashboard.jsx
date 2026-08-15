@@ -38,21 +38,32 @@ export default function Dashboard() {
     });
   };
 
+  const formatTimeDisplay = (timeStr) => {
+    if (!timeStr) return '';
+    const [hours, minutes] = timeStr.split(':');
+    const h = parseInt(hours, 10);
+    const ampm = h >= 12 ? 'PM' : 'AM';
+    const formattedHours = h % 12 || 12;
+    return `${formattedHours}:${minutes} ${ampm}`;
+  };
+
   const checkSessionActive = (dateStr, timeStr) => {
     if (!dateStr || !timeStr) return false;
     try {
-      const [time, modifier] = timeStr.split(' ');
-      let [hours, minutes] = time.split(':');
-      if (hours === '12') hours = '00';
-      if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
+      const [hours, minutes] = timeStr.split(':');
+      
+      // Parse the date into a local Date instance (handles UTC string conversion accurately)
+      const sessionStart = new Date(dateStr);
+      sessionStart.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
-      const sessionStart = new Date(`${dateStr.split('T')[0]}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
       const now = new Date();
-      const diffMins = (now - sessionStart) / 1000 / 60;
+      const diffMins = (now - sessionStart) / 60000;
 
-      // Session is active 5 mins before and expires 60 mins after
+      // Session unlocks 5 mins before and remains active for 60 mins after start time
       return diffMins >= -5 && diffMins <= 60;
-    } catch (e) { return false; }
+    } catch (e) {
+      return false;
+    }
   };
 
 
@@ -173,14 +184,14 @@ export default function Dashboard() {
                   <div>
                     <div className="flex items-center gap-2 mb-1">
                       <Calendar className="w-4 h-4 text-[#e07a5f]" />
-                      <span className="font-medium text-slate-900">{formatDisplayDate(session.appointment_date)} at {session.time}</span>
+                      <span className="font-medium text-slate-900">{formatDisplayDate(session.appointment_date)} at {formatTimeDisplay(session.appointment_time)}</span>
                     </div>
                     <p className="text-sm text-slate-500">
                       {session.status === 'pending' ? 'Waiting for a therapist to accept...' : `with Dr. ${session.other_first} ${session.other_last}`}
                     </p>
                   </div>
                   {session.status === 'scheduled' && (
-                    checkSessionActive(session.appointment_date, session.time) ? (
+                    checkSessionActive(session.appointment_date, session.appointment_time) ? (
                       <button
                         onClick={() => { setActiveSession(session); setIsVideoOpen(true); }}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -189,7 +200,7 @@ export default function Dashboard() {
                       </button>
                     ) : (
                       <button disabled className="bg-slate-200 text-slate-500 px-4 py-2 rounded-lg text-sm font-medium cursor-not-allowed">
-                        Locked (Starts at {session.time})
+                        Locked (Starts at {formatTimeDisplay(session.appointment_time)})
                       </button>
                     )
                   )}
