@@ -9,6 +9,14 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
   const [ending, setEnding] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
 
+  // Notify backend that this user has joined the room
+  useEffect(() => {
+    if (appointment?.id) {
+      axios.patch(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/join`, {}, { withCredentials: true })
+        .catch(err => console.error('Failed to log presence:', err));
+    }
+  }, [appointment?.id]);
+
   useEffect(() => {
     if (isOpen && appointment && isTherapist) {
       setNotes(appointment.notes || '');

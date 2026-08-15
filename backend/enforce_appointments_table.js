@@ -15,8 +15,14 @@ async function createTable() {
         notes TEXT,
         created_at TIMESTAMP DEFAULT NOW()
       );
+
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS patient_joined_at TIMESTAMP;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS therapist_joined_at TIMESTAMP;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS started_at TIMESTAMP;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS ended_at TIMESTAMP;
+      ALTER TABLE appointments ADD COLUMN IF NOT EXISTS alert_5m_sent BOOLEAN DEFAULT FALSE;
     `);
-    console.log('✅ appointments table verified/created.');
+    console.log('✅ appointments table verified/created with presence tracking columns.');
     process.exit(0);
   } catch (e) {
     console.error('❌ Failed to create table:', e);

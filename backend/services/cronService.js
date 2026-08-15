@@ -1,41 +1,65 @@
 const cron = require('node-cron');
 const db = require('../db');
+const { sendGenericSMS } = require('./smsService');
 
-// Job 1: Runs every minute to check for sessions exactly 24h or 1h away
+// Job 1: Runs every minute to handle 24h, 1h, and 5m no-show SMS alerts
 cron.schedule('* * * * *', async () => {
   try {
-    const now = new Date();
-    // Get all scheduled appointments
-    const appointments = await db.query(`
-      SELECT * FROM appointments 
-      WHERE status = 'scheduled' AND reminder_status != 'both'
+    // 1. Fetch upcoming appointments with patient and therapist phone numbers
+    const upcoming = await db.query(`
+      SELECT 
+        a.id, a.reminder_status, a.alert_5m_sent, a.patient_joined_at, a.therapist_joined_at,
+        (a.appointment_date + a.appointment_time::time) as scheduled_start,
+        p.phone_number as patient_phone, 
+        t.phone_number as therapist_phone
+      FROM appointments a
+      LEFT JOIN users p ON a.patient_id = p.id
+      LEFT JOIN users t ON a.therapist_id = t.id
+      WHERE a.status IN ('scheduled', 'accepted')
     `);
 
-    for (let appt of appointments.rows) {
-      if (!appt.appointment_date || !appt.appointment_time) continue;
+    const now = new Date();
+
+    for (let appt of upcoming.rows) {
+      if (!appt.scheduled_start) continue;
       
-      const [timeStr, modifier] = appt.appointment_time.split(' ');
-      let [hours, minutes] = timeStr.split(':');
-      if (hours === '12') hours = '00';
-      if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
-      
-      const sessionDateStr = appt.appointment_date.toLocaleDateString('en-CA', { timeZone: 'Africa/Kampala' });
-      const sessionStart = new Date(`${sessionDateStr}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
-      
+      const sessionStart = new Date(appt.scheduled_start);
       const diffMins = Math.floor((sessionStart - now) / 60000);
-      
-      // 24 hours = 1440 mins. Check if between 23.9 and 24 hours (roughly exactly 24h away)
+
+      // --- 24-HOUR REMINDER ---
       if (diffMins <= 1440 && diffMins > 1438 && appt.reminder_status !== '24h' && appt.reminder_status !== 'both') {
-        console.log(`[SMS STUB] Reminder: Session ${appt.id} is 24 hours away!`);
+        const msg = `Reminder: Your teletherapy session is exactly 24 hours away. Please log in on time.`;
+        if (appt.patient_phone) await sendGenericSMS(appt.patient_phone, msg);
+        if (appt.therapist_phone) await sendGenericSMS(appt.therapist_phone, msg);
+        
         const newStatus = appt.reminder_status === '1h' ? 'both' : '24h';
         await db.query(`UPDATE appointments SET reminder_status = $1 WHERE id = $2`, [newStatus, appt.id]);
       }
       
-      // 1 hour = 60 mins. Check if between 59 and 60 mins away
+      // --- 1-HOUR REMINDER ---
       if (diffMins <= 60 && diffMins > 58 && appt.reminder_status !== '1h' && appt.reminder_status !== 'both') {
-        console.log(`[SMS STUB] Reminder: Session ${appt.id} is 1 hour away!`);
+        const msg = `Alert: Your teletherapy session starts in 1 hour. Get your environment ready.`;
+        if (appt.patient_phone) await sendGenericSMS(appt.patient_phone, msg);
+        if (appt.therapist_phone) await sendGenericSMS(appt.therapist_phone, msg);
+        
         const newStatus = appt.reminder_status === '24h' ? 'both' : '1h';
         await db.query(`UPDATE appointments SET reminder_status = $1 WHERE id = $2`, [newStatus, appt.id]);
+      }
+
+      // --- 5-MINUTE NO-SHOW ALERT ---
+      // Triggers if it's 5+ minutes PAST the start time, session isn't active, one person is waiting, and alert hasn't sent
+      if (diffMins <= -5 && !appt.alert_5m_sent) {
+        const patientWaiting = appt.patient_joined_at && !appt.therapist_joined_at;
+        const therapistWaiting = appt.therapist_joined_at && !appt.patient_joined_at;
+
+        if (patientWaiting && appt.therapist_phone) {
+          await sendGenericSMS(appt.therapist_phone, `Urgent: Your patient has joined the session room and is waiting for you.`);
+          await db.query(`UPDATE appointments SET alert_5m_sent = TRUE WHERE id = $1`, [appt.id]);
+        } 
+        else if (therapistWaiting && appt.patient_phone) {
+          await sendGenericSMS(appt.patient_phone, `Urgent: Your therapist has started the session and is waiting for you in the room.`);
+          await db.query(`UPDATE appointments SET alert_5m_sent = TRUE WHERE id = $1`, [appt.id]);
+        }
       }
     }
   } catch (error) {

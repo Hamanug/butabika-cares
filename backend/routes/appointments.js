@@ -22,20 +22,38 @@ router.post('/book', authenticate, async (req, res) => {
   try {
     const { appointment_date, appointment_time, therapist_id, notes } = req.body;
     
+    // 1. Time Boundary Validation (8 AM to 8 PM)
+    const [hours, minutes] = appointment_time.split(':').map(Number);
+    if (hours < 8 || hours >= 20) {
+      return res.status(400).json({ error: 'Appointments must be scheduled between 8:00 AM and 8:00 PM East Africa Time.' });
+    }
+
+    // 2. Auto-Expire "Stuck" Sessions
+    // Automatically fail any pending or accepted sessions where the scheduled date/time has already passed
+    await db.query(`
+      UPDATE appointments 
+      SET status = 'expired' 
+      WHERE status IN ('pending', 'scheduled', 'accepted') 
+      AND (appointment_date + appointment_time::time) < NOW()
+    `);
+
+    // 3. Anti-Spam Check (Now only applies to valid future/current sessions)
     const existing = await db.query(
       `SELECT id FROM appointments WHERE patient_id = $1 AND status IN ('pending', 'scheduled', 'accepted')`,
       [req.user.id]
     );
 
     if (existing.rows.length > 0) {
-      return res.status(400).json({ error: 'You already have a pending or scheduled session. Please complete it before booking another.' });
+      return res.status(400).json({ error: 'You already have an active session request. Please wait for it to conclude before booking another.' });
     }
 
+    // 4. Create New Session
     const result = await db.query(
       `INSERT INTO appointments (patient_id, therapist_id, appointment_date, appointment_time, status, notes)
        VALUES ($1, $2, $3, $4, 'pending', $5) RETURNING *`,
       [req.user.id, therapist_id || null, appointment_date, appointment_time, notes]
     );
+    
     res.json({ message: 'Appointment requested successfully', appointment: result.rows[0] });
   } catch (err) { 
     console.error("DB Error:", err);
@@ -138,8 +156,21 @@ router.get('/my-sessions', authenticate, async (req, res) => {
 router.put('/:id/complete', authenticate, async (req, res) => {
   try {
     const { notes } = req.body;
-    await db.query(`UPDATE appointments SET status = 'completed', notes = $1 WHERE id = $2`, [notes, req.params.id]);
-    res.json({ message: 'Session completed successfully' });
+    
+    const result = await db.query(`
+      UPDATE appointments 
+      SET status = 'completed', 
+          notes = $1,
+          ended_at = NOW()
+      WHERE id = $2 
+      RETURNING *
+    `, [notes, req.params.id]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+
+    res.json({ message: 'Session completed successfully', session: result.rows[0] });
   } catch (err) { 
     console.error("DB Error:", err);
     res.status(500).json({ error: 'Backend crash', details: err.message }); 
@@ -199,6 +230,44 @@ router.get('/patient/my-notes', authenticate, async (req, res) => {
   } catch (err) {
     console.error('DB Error:', err);
     res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+// Mark user as joined in the video room
+router.patch('/:id/join', authenticate, async (req, res) => {
+  try {
+    const { id } = req.params;
+    const role = req.user.role; // 'patient' or 'therapist'
+
+    // Determine which column to update based on role
+    const joinColumn = role === 'therapist' ? 'therapist_joined_at' : 'patient_joined_at';
+
+    // 1. Timestamp the specific user's arrival (only if not already set)
+    await db.query(`
+      UPDATE appointments 
+      SET ${joinColumn} = NOW() 
+      WHERE id = $1 AND ${joinColumn} IS NULL
+    `, [id]);
+
+    // 2. Check if BOTH are now in the room. If so, officially start the session.
+    const check = await db.query(`
+      SELECT patient_joined_at, therapist_joined_at, started_at 
+      FROM appointments WHERE id = $1
+    `, [id]);
+
+    const session = check.rows[0];
+    if (session.patient_joined_at && session.therapist_joined_at && !session.started_at) {
+      await db.query(`
+        UPDATE appointments 
+        SET started_at = NOW(), status = 'active' 
+        WHERE id = $1
+      `, [id]);
+    }
+
+    res.json({ message: 'Presence logged successfully' });
+  } catch (err) {
+    console.error("Presence Tracking Error:", err);
+    res.status(500).json({ error: 'Failed to log presence' });
   }
 });
 
