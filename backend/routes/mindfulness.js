@@ -17,7 +17,7 @@ const authenticate = (req, res, next) => {
 };
 
 router.post('/', authenticate, async (req, res) => {
-  const { type, date } = req.body;
+  const { type, date, cycles_completed } = req.body;
   
   if (!type) {
     return res.status(400).json({ error: 'Type is required' });
@@ -25,8 +25,8 @@ router.post('/', authenticate, async (req, res) => {
 
   try {
     const result = await db.query(
-      'INSERT INTO mindfulness_tracking (user_id, type, created_at) VALUES ($1, $2, $3) RETURNING *',
-      [req.user.id, type, date || new Date().toISOString()]
+      'INSERT INTO mindfulness_tracking (user_id, type, cycles_completed, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
+      [req.user.id, type, cycles_completed || 0, date || new Date().toISOString()]
     );
     res.json({ message: 'Mindfulness session saved successfully', data: result.rows[0] });
   } catch (err) {

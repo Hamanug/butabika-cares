@@ -37,10 +37,12 @@ router.get('/active', async (req, res) => {
     const result = await db.query(`
       SELECT 
         u.id, 
+        u.role,
+        u.email,
+        tp.title,
         COALESCE(p.first_name, 'New') AS first_name, 
         COALESCE(p.last_name, 'Therapist') AS last_name, 
         COALESCE(tp.specialization, 'Pending Assignment') as occupation, 
-        u.email, 
         tp.profile_picture,
         tp.bio
       FROM users u
@@ -209,7 +211,7 @@ router.get('/profile', authenticate, async (req, res) => {
     const result = await db.query(`
       SELECT u.id, u.phone_number, u.role, u.email, u.display_id,
              p.first_name, p.last_name,
-             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability
+             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability, tp.title
       FROM users u 
       LEFT JOIN profiles p ON u.id = p.user_id 
       LEFT JOIN therapist_profiles tp ON u.id = tp.user_id
@@ -227,7 +229,7 @@ router.get('/profile', authenticate, async (req, res) => {
 router.put('/profile', authenticate, async (req, res) => {
   if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
 
-  const { first_name, last_name, email, specialization, license_number, bio, hourly_rate } = req.body;
+  const { first_name, last_name, email, specialization, license_number, bio, hourly_rate, title } = req.body;
   const rate = hourly_rate ? parseFloat(hourly_rate) : null;
   
   try {
@@ -247,14 +249,14 @@ router.put('/profile', authenticate, async (req, res) => {
     const existingTherapist = await db.query('SELECT id FROM therapist_profiles WHERE user_id = $1', [req.user.id]);
     if (existingTherapist.rows.length > 0) {
       await db.query(`
-        UPDATE therapist_profiles SET specialization = $1, license_number = $2, bio = $3, hourly_rate = $4
-        WHERE user_id = $5
-      `, [specialization, license_number, bio, rate, req.user.id]);
+        UPDATE therapist_profiles SET specialization = $1, license_number = $2, bio = $3, hourly_rate = $4, title = $5
+        WHERE user_id = $6
+      `, [specialization, license_number, bio, rate, title, req.user.id]);
     } else {
       await db.query(`
-        INSERT INTO therapist_profiles (user_id, specialization, license_number, bio, hourly_rate)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [req.user.id, specialization, license_number, bio, rate]);
+        INSERT INTO therapist_profiles (user_id, specialization, license_number, bio, hourly_rate, title)
+        VALUES ($1, $2, $3, $4, $5, $6)
+      `, [req.user.id, specialization, license_number, bio, rate, title]);
     }
     
     await db.query('COMMIT');
@@ -262,7 +264,7 @@ router.put('/profile', authenticate, async (req, res) => {
     const result = await db.query(`
       SELECT u.id, u.phone_number, u.role, u.email, u.display_id,
              p.first_name, p.last_name,
-             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability
+             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability, tp.title
       FROM users u 
       LEFT JOIN profiles p ON u.id = p.user_id 
       LEFT JOIN therapist_profiles tp ON u.id = tp.user_id
@@ -304,7 +306,7 @@ router.post('/profile/upload', authenticate, upload.single('profile_picture'), a
     const result = await db.query(`
       SELECT u.id, u.phone_number, u.role, u.email, u.display_id,
              p.first_name, p.last_name,
-             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability
+             tp.specialization, tp.license_number, tp.bio, tp.profile_picture, tp.hourly_rate, tp.availability, tp.title
       FROM users u 
       LEFT JOIN profiles p ON u.id = p.user_id 
       LEFT JOIN therapist_profiles tp ON u.id = tp.user_id

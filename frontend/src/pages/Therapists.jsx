@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import toast from 'react-hot-toast';
+import { formatUserName } from '../utils/formatters';
 
 export default function Therapists() {
   const navigate = useNavigate();
@@ -110,7 +111,7 @@ export default function Therapists() {
                     <div className="flex justify-between items-start mb-2">
                       <div>
                         <h2 className="text-xl font-bold text-slate-900">
-                          Dr. {therapist.first_name || 'New'} {therapist.last_name || 'Therapist'}
+                          {formatUserName(therapist)}
                         </h2>
                         <div className="flex items-center text-sm text-slate-500 mt-1">
                           <BookOpen className="h-4 w-4 mr-1 text-slate-400" />

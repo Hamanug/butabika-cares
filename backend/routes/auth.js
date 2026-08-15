@@ -4,7 +4,31 @@ const jwt = require('jsonwebtoken');
 const db = require('../db');
 const formatPhone = require('../utils/formatPhone');
 const { sendOTP } = require('../services/smsService');
-const { nanoid } = require('nanoid');
+const crypto = require('crypto');
+
+// Generates a unique 8-digit display ID (e.g., "4921-8832")
+async function generateUniqueDisplayId(db) {
+  let isUnique = false;
+  let displayId = '';
+
+  while (!isUnique) {
+    // Generate a secure random number between 10000000 and 99999999
+    const num = crypto.randomInt(10000000, 100000000).toString();
+    // Format with a hyphen for readability
+    displayId = `${num.slice(0, 4)}-${num.slice(4)}`;
+
+    // Check PostgreSQL to ensure no collision exists
+    const result = await db.query(
+      'SELECT id FROM users WHERE display_id = $1', 
+      [displayId]
+    );
+
+    if (result.rows.length === 0) {
+      isUnique = true;
+    }
+  }
+  return displayId;
+}
 
 const calculateAge = (dobString) => {
   const birthDate = new Date(dobString);
@@ -68,7 +92,7 @@ router.post('/patient/verify-otp', async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 10);
 
     if (!user) {
-      const displayId = nanoid(6);
+      const displayId = await generateUniqueDisplayId(db);
       const newUserResult = await db.query('INSERT INTO users (phone_number, role, is_phone_verified, password_hash, date_of_birth, display_id) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [normalizedPhone, 'patient', true, passwordHash, date_of_birth, displayId]);
       user = newUserResult.rows[0];
     } else {

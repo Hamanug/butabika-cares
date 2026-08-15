@@ -1,11 +1,12 @@
 export const formatPatientName = (user) => {
-  if (!user) return 'Unknown User';
-  if (user.first_name || user.last_name) {
-    const first = user.first_name || '';
-    const last = user.last_name || '';
-    return `${first} ${last}`.trim();
+  if (!user) return 'Patient';
+
+  // Renders cleanly as: "Patient #4921-8832"
+  if (user.display_id) {
+    return `Patient ${user.display_id}`;
   }
-  return `Patient #${user.display_id || 'Unknown'}`;
+
+  return 'Anonymous Patient'; 
 };
 
 export const formatUserName = (user) => {
@@ -13,8 +14,10 @@ export const formatUserName = (user) => {
   if (user.role === 'therapist') {
     const first = user.first_name || (user.name ? user.name.split(' ')[0] : '');
     const last = user.last_name || (user.name ? user.name.split(' ').slice(1).join(' ') : '');
-    if (!first && !last) return 'Dr. Therapist';
-    return `Dr. ${first} ${last}`.trim();
+    const title = user.title ? `${user.title} ` : ''; 
+
+    if (!first && !last) return user.title ? `${user.title} Therapist` : 'Therapist';
+    return `${title}${first} ${last}`.trim();
   }
   return formatPatientName(user);
 };

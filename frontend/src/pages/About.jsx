@@ -28,8 +28,11 @@ export default function About() {
           <p className="text-lg text-cyan-800 mb-8 max-w-2xl mx-auto">
             We are dedicated to providing accessible, professional mental health support to help you navigate life's challenges and nurture your mind.
           </p>
-          <Link to="/auth" className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-8 py-4 rounded-lg text-lg shadow-lg transition-all inline-block mt-4">
-            Start Your Journey
+          <Link 
+            to={user ? "/dashboard" : "/auth"} 
+            className="bg-cyan-600 hover:bg-cyan-700 text-white font-medium px-8 py-4 rounded-lg text-lg shadow-lg transition-all inline-block mt-4"
+          >
+            {user ? 'Go to Dashboard' : 'Start Your Journey'}
           </Link>
           <div className="flex justify-center mt-6 w-full">
             <Link to="/therapists" className="flex items-center gap-2 bg-[#D97757] hover:bg-[#C26243] text-white font-medium px-6 py-3 rounded-lg shadow-md transition-all">

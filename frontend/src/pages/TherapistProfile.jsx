@@ -14,7 +14,7 @@ export default function TherapistProfile() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [formData, setFormData] = useState({
-    first_name: '', last_name: '', email: '', specialization: '', license_number: '', bio: '', hourly_rate: ''
+    first_name: '', last_name: '', email: '', specialization: '', license_number: '', bio: '', hourly_rate: '', title: ''
   });
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function TherapistProfile() {
           first_name: data.first_name || '', last_name: data.last_name || '',
           email: data.email || '', specialization: data.specialization || '',
           license_number: data.license_number || '', bio: data.bio || '',
-          hourly_rate: data.hourly_rate || ''
+          hourly_rate: data.hourly_rate || '', title: data.title || ''
         });
         setUser(prev => ({ ...prev, ...data }));
       } catch (err) {
@@ -186,6 +186,36 @@ export default function TherapistProfile() {
                   <input type="email" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full bg-white border border-slate-300 focus:border-warm-500 focus:ring-2 focus:ring-warm-100 rounded-lg px-4 py-2.5 outline-none transition-all text-slate-900" placeholder="yourname@example.com" />
                 ) : (
                   <p className="px-4 py-2.5 text-slate-900 bg-transparent">{formData.email || <span className="text-slate-400 italic">No email provided</span>}</p>
+                )}
+              </div>
+
+              {/* Professional Title Dropdown */}
+              <div className="col-span-1">
+                <label className="flex items-center text-sm font-medium text-slate-700 mb-2 gap-2">
+                  <BadgeInfo className="w-4 h-4 text-slate-400" /> Professional Title
+                </label>
+                {isEditing ? (
+                  <>
+                    <select
+                      name="title"
+                      value={formData.title || ''}
+                      onChange={e => setFormData({...formData, title: e.target.value})}
+                      className="w-full p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-warm-100 focus:border-warm-500 outline-none transition-all text-sm bg-white"
+                    >
+                      <option value="">None / Blank</option>
+                      <option value="Dr.">Dr.</option>
+                      <option value="Mr.">Mr.</option>
+                      <option value="Ms.">Ms.</option>
+                      <option value="Mrs.">Mrs.</option>
+                      <option value="Prof.">Prof.</option>
+                      <option value="Psychologist">Psychologist</option>
+                      <option value="Therapist">Therapist</option>
+                      <option value="Counselor">Counselor</option>
+                    </select>
+                    <p className="text-xs text-gray-500 mt-1">This prefix will be displayed to patients globally.</p>
+                  </>
+                ) : (
+                  <p className="px-4 py-2.5 text-slate-900 bg-transparent">{formData.title || <span className="text-slate-400 italic">None</span>}</p>
                 )}
               </div>
 

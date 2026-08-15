@@ -74,10 +74,41 @@ router.get('/dashboard-stats', authenticate, async (req, res) => {
       }
     }
 
+    // 7-day Stress count
+    const recentStress = await db.query(`
+      SELECT COUNT(*) FROM stress_tracking 
+      WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '7 days'
+    `, [userId]);
+
+    // 7-day CBT Thought Record count
+    const recentCbt = await db.query(`
+      SELECT COUNT(*) FROM thought_records 
+      WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '7 days'
+    `, [userId]);
+
+    // 7-day Mindfulness Total Cycles (summing the completed cycles)
+    const recentMindfulness = await db.query(`
+      SELECT COALESCE(SUM(cycles_completed), 0) as total_cycles FROM mindfulness_tracking 
+      WHERE user_id = $1 AND created_at >= NOW() - INTERVAL '7 days'
+    `, [userId]);
+
+    // Calculate weekly guided breathing cycles
+    const weeklyBreathing = await db.query(`
+      SELECT COALESCE(SUM(cycles_completed), 0) as total_cycles 
+      FROM mindfulness_tracking 
+      WHERE user_id = $1 
+      AND type = 'guided_breathing'
+      AND created_at >= NOW() - INTERVAL '7 days'
+    `, [userId]);
+
     res.json({
       assessmentsCompleted: parseInt(assessments.rows[0].count),
       moodStatus,
-      journalEntries: parseInt(totalEntries.rows[0].count)
+      journalEntries: parseInt(totalEntries.rows[0].count),
+      stressCount: parseInt(recentStress.rows[0].count),
+      cbtCount: parseInt(recentCbt.rows[0].count),
+      mindfulnessCycles: parseInt(recentMindfulness.rows[0].total_cycles),
+      weeklyBreathingCycles: parseInt(weeklyBreathing.rows[0].total_cycles)
     });
   } catch (err) {
     console.error('Failed to fetch stats:', err);

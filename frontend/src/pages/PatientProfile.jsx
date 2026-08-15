@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { User, Mail, Phone, Briefcase, FileText, Camera, CheckCircle2, Loader2, Edit2 } from 'lucide-react';
-import { formatPatientName } from '../utils/formatters';
+import { formatUserName } from '../utils/formatters';
 import toast from 'react-hot-toast';
 
 export default function PatientProfile() {
@@ -74,11 +74,7 @@ export default function PatientProfile() {
   if (loading) return <div className="min-h-screen flex justify-center items-center"><Loader2 className="animate-spin text-serene-500 w-8 h-8" /></div>;
 
   const displayInitials = (formData.first_name?.[0] || '') + (formData.last_name?.[0] || '');
-  const displayName = formatPatientName({
-    ...user,
-    first_name: formData.first_name || user?.first_name,
-    last_name: formData.last_name || user?.last_name
-  });
+  const displayName = formatUserName(user);
 
   return (
     <div className="min-h-screen bg-slate-50 pt-28 pb-12">
@@ -136,9 +132,6 @@ export default function PatientProfile() {
             </div>
             <div>
               <h2 className="text-2xl font-medium text-slate-900">{displayName}</h2>
-              {user?.display_id && (
-                <p className="text-sm text-slate-400 mt-1 font-mono">Patient #{user.display_id}</p>
-              )}
             </div>
           </div>
 

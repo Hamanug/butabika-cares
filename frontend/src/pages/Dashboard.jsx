@@ -4,15 +4,16 @@ import axios from 'axios';
 import BookSessionModal from '../components/BookSessionModal';
 import VideoRoomModal from '../components/VideoRoomModal';
 import { useAuth } from '../context/AuthContext';
+import { formatUserName } from '../utils/formatters';
 import {
   Heart, ClipboardList, PenLine, Activity,
-  BookOpen, Brain, PhoneCall, Calendar
+  BookOpen, Brain, PhoneCall, Calendar, Sparkles
 } from 'lucide-react';
 
 export default function Dashboard() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [breathingStats, setBreathingStats] = useState({ cycles: 0, lastSession: '—' });
+  const [stats, setStats] = useState({});
   const [dashboardStats, setDashboardStats] = useState({ assessmentsCompleted: 0, moodStatus: 'No recent data', journalEntries: 0 });
 
   useEffect(() => {
@@ -20,6 +21,7 @@ export default function Dashboard() {
       try {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/patient/dashboard-stats`, { withCredentials: true });
         setDashboardStats(res.data);
+        setStats(res.data);
       } catch (err) {
         console.error('Failed to fetch dashboard stats', err);
       }
@@ -53,13 +55,7 @@ export default function Dashboard() {
     } catch (e) { return false; }
   };
 
-  // Wire up the breathing stats from our earlier exercise module
-  useEffect(() => {
-    const stats = localStorage.getItem('breathingStats');
-    if (stats) {
-      setBreathingStats(JSON.parse(stats));
-    }
-  }, []);
+
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
@@ -79,8 +75,6 @@ export default function Dashboard() {
     if (user) fetchSessions();
   }, [user]);
 
-  const displayName = user?.first_name || user?.name || user?.email?.split('@')[0] || '';
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-serene-50 to-white pt-32 pb-20">
       <div className="container max-w-5xl mx-auto px-4">
@@ -89,7 +83,7 @@ export default function Dashboard() {
         <div className="mb-12 text-center md:text-left flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
             <h1 className="text-4xl font-medium mb-3 text-slate-900">
-              Welcome back{displayName ? `, ${displayName}` : ''}!
+              Welcome back, {formatUserName(user)}!
             </h1>
             <p className="text-slate-600 text-lg">
               Track your journey to mental wellbeing with these tools and resources.
@@ -133,37 +127,37 @@ export default function Dashboard() {
               )}
             </Link>
 
-            {/* 3. Breathing */}
-            <Link to="/breathing" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
+            {/* 3. Breathing Exercises */}
+            <Link to="/exercises" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-indigo-300"></div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-slate-700">Breathing</h4>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-sm font-medium text-slate-500">Breathing Exercises</span>
                 <Activity className="h-5 w-5 text-indigo-500" />
               </div>
-              <p className="text-3xl font-semibold text-slate-900">{breathingStats.cycles}</p>
-              <p className="text-sm text-slate-500 mt-1">Total cycles completed</p>
+              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.weeklyBreathingCycles || 0}</h4>
+              <p className="text-sm text-slate-500">Cycles logged this week</p>
             </Link>
 
-            {/* 4. Stress Assessments */}
+            {/* 4. Stress Tracking */}
             <Link to="/stress-management" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-sage-300"></div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-slate-700">Stress Assessments</h4>
-                <Activity className="h-5 w-5 text-sage-500" />
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-sm font-medium text-slate-500">Stress Tracking</span>
+                <Activity className="h-5 w-5 text-emerald-500" />
               </div>
-              <p className="text-lg font-semibold text-slate-900 mt-1">Perceived Stress Scale</p>
-              <p className="text-sm text-slate-500 mt-1">Track your stress levels</p>
+              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.stressCount || 0}</h4>
+              <p className="text-sm text-slate-500">Records logged this week</p>
             </Link>
 
-            {/* 5. Cognitive Reframing */}
+            {/* 5. CBT Thought Record */}
             <Link to="/cognitive-reframing" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-purple-300"></div>
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-slate-700">Cognitive Reframing</h4>
+              <div className="flex justify-between items-start mb-4">
+                <span className="text-sm font-medium text-slate-500">CBT Thought Record</span>
                 <Brain className="h-5 w-5 text-purple-500" />
               </div>
-              <p className="text-lg font-semibold text-slate-900 mt-1">CBT Thought Record</p>
-              <p className="text-sm text-slate-500 mt-1">Challenge negative thoughts</p>
+              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.cbtCount || 0}</h4>
+              <p className="text-sm text-slate-500">Records logged this week</p>
             </Link>
 
           </div>
@@ -208,7 +202,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* 6-Card Action Grid */}
+        {/* Continue your journey */}
         <div>
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-medium text-slate-900">Continue your journey</h3>
@@ -216,6 +210,7 @@ export default function Dashboard() {
               <PhoneCall className="h-4 w-4" /> Speak to a Therapist
             </button>
           </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
 
             {/* Breathing Exercises */}

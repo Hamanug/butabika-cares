@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle2, ArrowLeft } from 'lucide-react';
+import axios from 'axios';
 
 export default function Exercises() {
   const navigate = useNavigate();
@@ -10,44 +11,48 @@ export default function Exercises() {
   const [phase, setPhase] = useState('idle'); 
   const [counter, setCounter] = useState(4);
   const [cycles, setCycles] = useState(0);
-  const [totalLifetimeCycles, setTotalLifetimeCycles] = useState(0);
+  const [weeklyCycles, setWeeklyCycles] = useState(0);
 
   useEffect(() => {
-    const stats = localStorage.getItem('breathingStats');
-    if (stats) {
-      setTotalLifetimeCycles(JSON.parse(stats).cycles || 0);
-    }
+    const fetchBreathingStats = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/patient/dashboard-stats`, { withCredentials: true });
+        setWeeklyCycles(response.data.weeklyBreathingCycles || 0);
+      } catch (error) {
+        console.error('Failed to fetch breathing stats', error);
+      }
+    };
+    fetchBreathingStats();
   }, []);
 
   useEffect(() => {
-    let interval = null;
+    let timeoutId;
+    
     if (isActive) {
-      interval = setInterval(() => {
-        setCounter((prev) => {
-          if (prev > 1) return prev - 1;
-          
-          let nextPhase = 'inhale';
-          let nextCount = 4;
-          
-          setPhase((currentPhase) => {
-            if (currentPhase === 'inhale') { nextPhase = 'hold'; nextCount = 7; }
-            else if (currentPhase === 'hold') { nextPhase = 'exhale'; nextCount = 8; }
-            else { 
-              nextPhase = 'inhale'; 
-              nextCount = 4; 
-              setCycles(c => c + 1); 
-            }
-            return nextPhase;
-          });
-          
-          return nextCount;
-        });
-      }, 1000);
-    } else {
-      clearInterval(interval);
+      if (counter > 1) {
+        // Standard countdown tick
+        timeoutId = setTimeout(() => setCounter(counter - 1), 1000);
+      } else {
+        // Phase transition tick
+        timeoutId = setTimeout(() => {
+          if (phase === 'inhale') {
+            setPhase('hold');
+            setCounter(7);
+          } else if (phase === 'hold') {
+            setPhase('exhale');
+            setCounter(8);
+          } else if (phase === 'exhale') {
+            setPhase('inhale');
+            setCounter(4);
+            setCycles((prev) => prev + 1); // Increment local session cycles
+          }
+        }, 1000);
+      }
     }
-    return () => clearInterval(interval);
-  }, [isActive]);
+    
+    // Cleanup prevents memory leaks and overlap
+    return () => clearTimeout(timeoutId);
+  }, [isActive, counter, phase]);
 
   const toggleExercise = () => {
     if (!isActive) {
@@ -67,7 +72,7 @@ export default function Exercises() {
     setCounter(4);
   };
 
-  const handleSaveToDashboard = () => {
+  const handleSaveToDashboard = async () => {
     if (!user) {
       sessionStorage.setItem('pendingExercise', JSON.stringify({ type: 'breathing', cycles }));
       navigate('/auth');
@@ -75,15 +80,15 @@ export default function Exercises() {
     }
 
     if (cycles > 0) {
-      // Fetch existing stats to add to them, or start fresh
-      const existingStats = JSON.parse(localStorage.getItem('breathingStats')) || { cycles: 0 };
-      const newTotalCycles = (existingStats.cycles || 0) + cycles;
-      const today = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-      
-      localStorage.setItem('breathingStats', JSON.stringify({ 
-        cycles: newTotalCycles, 
-        lastSession: today 
-      }));
+      try {
+        await axios.post(
+          `${import.meta.env.VITE_API_URL}/api/mindfulness`, 
+          { type: 'guided_breathing', date: new Date().toISOString(), cycles_completed: cycles }, 
+          { withCredentials: true }
+        );
+      } catch (error) {
+        console.error('Failed to sync mindfulness data:', error);
+      }
     }
     navigate('/dashboard');
   };
@@ -123,7 +128,7 @@ export default function Exercises() {
               <div className="mb-10">
                 <p className="text-slate-500 mb-3 text-sm">Follow the animation. Inhale, hold, and exhale slowly.</p>
                 <span className="inline-block bg-cyan-50 text-cyan-700 border border-cyan-100 px-4 py-1.5 rounded-full text-sm font-medium">
-                  You have completed {totalLifetimeCycles} cycles so far
+                  You have completed {weeklyCycles} cycles this week
                 </span>
               </div>
 
