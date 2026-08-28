@@ -5,18 +5,56 @@ const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true);
 
   // Configure axios default config
   axios.defaults.withCredentials = true;
 
+  // 1. Axios Interceptor for 401s
   useEffect(() => {
-    // Try to fetch current session (assumes httpOnly cookie will be sent automatically)
+    const interceptor = axios.interceptors.response.use(
+      response => response,
+      error => {
+        if (error.response?.status === 401) {
+          logout(); // Gracefully clear state on unauthorized
+        }
+        return Promise.reject(error);
+      }
+    );
+    return () => axios.interceptors.response.eject(interceptor);
+  }, []);
+
+  // 2. 20-Minute Idle Timer for Therapists
+  useEffect(() => {
+    if (!user || user.role !== 'therapist') return; // Only strictly track therapists
+    
+    let idleTimeout;
+    const resetIdleTimer = () => {
+      if (idleTimeout) clearTimeout(idleTimeout);
+      idleTimeout = setTimeout(() => {
+        logout();
+        // Optional: You can toast/alert here that they were logged out due to inactivity
+      }, 20 * 60 * 1000); // 20 minutes
+    };
+
+    // Listen for activity
+    const events = ['mousemove', 'keydown', 'scroll', 'click'];
+    events.forEach(e => window.addEventListener(e, resetIdleTimer));
+    resetIdleTimer(); // Init
+
+    return () => {
+      if (idleTimeout) clearTimeout(idleTimeout);
+      events.forEach(e => window.removeEventListener(e, resetIdleTimer));
+    };
+  }, [user]);
+
+  // 3. Initial Hydration Check
+  useEffect(() => {
     const checkSession = async () => {
       const token = localStorage.getItem('token');
       if (!token) {
         setUser(null);
-        setLoading(false);
+        setIsLoading(false);
         return;
       }
       try {
@@ -26,11 +64,11 @@ export const AuthProvider = ({ children }) => {
         } else {
           setUser(null);
         }
-        setLoading(false);
       } catch (error) {
         console.error("Session check error:", error);
         setUser(null);
-        setLoading(false);
+      } finally {
+        setIsLoading(false);
       }
     };
     checkSession();
@@ -44,14 +82,18 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
-    await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/logout`);
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/logout`);
+    } catch(err) {
+      console.error(err);
+    }
     localStorage.removeItem('token');
     setUser(null);
   };
 
   return (
-    <AuthContext.Provider value={{ user, setUser, login, logout, loading }}>
-      {!loading && children}
+    <AuthContext.Provider value={{ user, setUser, login, logout, isLoading }}>
+      {children}
     </AuthContext.Provider>
   );
 };

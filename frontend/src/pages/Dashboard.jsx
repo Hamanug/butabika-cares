@@ -175,11 +175,11 @@ export default function Dashboard() {
         </div>
 
         {/* Upcoming Sessions */}
-        {sessions?.length > 0 && (
+        {sessions?.filter(s => ['pending', 'scheduled'].includes(s.status)).length > 0 && (
           <div className="mb-12">
             <h3 className="text-xl font-medium mb-6 text-slate-900">Upcoming Sessions</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {(sessions || []).map(session => (
+              {(sessions || []).filter(s => ['pending', 'scheduled'].includes(s.status)).map(session => (
                 <div key={session.id} className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">

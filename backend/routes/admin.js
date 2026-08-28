@@ -79,6 +79,9 @@ router.post('/therapists', async (req, res) => {
     res.json({ message: 'Therapist onboarded successfully', therapist: userRes.rows[0] });
   } catch (error) {
     console.error('Failed to onboard therapist:', error);
+    if (error.code === '23505') {
+      return res.status(400).json({ success: false, error: 'A user with this email already exists.' });
+    }
     res.status(500).json({ error: 'Failed to create therapist profile' });
   }
 });

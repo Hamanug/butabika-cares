@@ -57,6 +57,9 @@ router.post('/book', authenticate, async (req, res) => {
     res.json({ message: 'Appointment requested successfully', appointment: result.rows[0] });
   } catch (err) { 
     console.error("DB Error:", err);
+    if (err.code === '23505' && err.constraint === 'enforce_single_active_session') { 
+      return res.status(400).json({ error: 'You already have an active session request processing.' }); 
+    }
     res.status(500).json({ error: 'Backend crash', details: err.message }); 
   }
 });
@@ -152,17 +155,17 @@ router.get('/my-sessions', authenticate, async (req, res) => {
     
     // Convert UTC Date string properly in DB query or just select it as is
     const query = isTherapist
-      ? `SELECT a.*, p.first_name as other_first, p.last_name as other_last, u.phone_number as other_phone, u.display_id as other_display_id 
+      ? `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.phone_number as other_phone, u.display_id as other_display_id 
          FROM appointments a 
          JOIN users u ON a.patient_id = u.id 
          LEFT JOIN profiles p ON u.id = p.user_id
-         WHERE a.therapist_id = $1 AND (a.status = 'scheduled' OR a.status = 'pending')
+         WHERE a.therapist_id = $1 AND a.status IN ('scheduled', 'pending', 'completed')
          ORDER BY a.appointment_date ASC`
-      : `SELECT a.*, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id 
+      : `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id 
          FROM appointments a 
          LEFT JOIN users u ON a.therapist_id = u.id 
          LEFT JOIN profiles p ON u.id = p.user_id
-         WHERE a.patient_id = $1 AND (a.status = 'scheduled' OR a.status = 'pending')
+         WHERE a.patient_id = $1 AND a.status IN ('scheduled', 'pending', 'completed')
          ORDER BY a.appointment_date ASC`;
 
     const result = await db.query(query, [req.user.id]);
@@ -170,6 +173,16 @@ router.get('/my-sessions', authenticate, async (req, res) => {
   } catch (err) { 
     console.error("DB Error:", err);
     res.status(500).json({ error: 'Backend crash', details: err.message }); 
+  }
+});
+
+// Ping Heartbeat
+router.patch('/:id/ping', authenticate, async (req, res) => {
+  try {
+    await db.query('UPDATE appointments SET last_ping_at = NOW() WHERE id = $1', [req.params.id]);
+    res.json({ message: 'Ping received' });
+  } catch (err) {
+    res.status(500).json({ error: 'Backend crash' });
   }
 });
 

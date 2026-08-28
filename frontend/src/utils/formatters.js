@@ -1,12 +1,11 @@
-export const formatPatientName = (user) => {
-  if (!user) return 'Patient';
-
-  // Renders cleanly as: "Patient #4921-8832"
-  if (user.display_id) {
-    return `Patient ${user.display_id}`;
-  }
-
-  return 'Anonymous Patient'; 
+export const formatPatientName = ({ first_name, last_name, display_id }) => {
+  const first = first_name?.trim();
+  const last = last_name?.trim();
+  
+  if (first && last) return `${first} ${last}`;
+  if (first || last) return `${first || last} (${display_id})`;
+  if (display_id) return `Patient ${display_id}`;
+  return 'Anonymous Patient';
 };
 
 export const formatUserName = (user) => {

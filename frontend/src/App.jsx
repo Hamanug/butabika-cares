@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import Home from './pages/Home';
 import TherapistDashboard from './pages/TherapistDashboard';
+import SessionHistory from './pages/SessionHistory';
 import Auth from './pages/Auth';
 
 import TherapistAuth from './pages/TherapistAuth';
@@ -34,7 +35,8 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 
 const ProtectedRoute = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
+  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading session...</div>;
   if (!user) {
     return <Navigate to="/auth" replace />;
   }
@@ -106,6 +108,7 @@ const App = () => {
                   </RoleRoute>
                 }
               />
+              <Route path="/therapist/history" element={<RoleRoute allowedRole="therapist" redirectTo="/therapist/auth"><SessionHistory /></RoleRoute>} />
               <Route
                 path="/therapist/patient/:patientId"
                 element={

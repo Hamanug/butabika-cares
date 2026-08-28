@@ -238,12 +238,15 @@ router.put('/profile', authenticate, async (req, res) => {
     await db.query('UPDATE users SET email = $1 WHERE id = $2', [email, req.user.id]);
     
     // Profiles UPSERT
-    const existingProfile = await db.query('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
-    if (existingProfile.rows.length > 0) {
-      await db.query(`UPDATE profiles SET first_name = $1, last_name = $2 WHERE user_id = $3`, [first_name, last_name, req.user.id]);
-    } else {
-      await db.query(`INSERT INTO profiles (user_id, first_name, last_name) VALUES ($1, $2, $3)`, [req.user.id, first_name, last_name]);
-    }
+    await db.query('ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);').catch(() => console.log('Constraint exists'));
+    await db.query(`
+      INSERT INTO profiles (user_id, first_name, last_name) 
+      VALUES ($1, $2, $3) 
+      ON CONFLICT (user_id) 
+      DO UPDATE SET 
+        first_name = EXCLUDED.first_name, 
+        last_name = EXCLUDED.last_name
+    `, [req.user.id, first_name, last_name]);
     
     // Therapist Profiles UPSERT
     const existingTherapist = await db.query('SELECT id FROM therapist_profiles WHERE user_id = $1', [req.user.id]);

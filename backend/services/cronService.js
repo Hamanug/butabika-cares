@@ -52,16 +52,55 @@ cron.schedule('* * * * *', async () => {
         const patientWaiting = appt.patient_joined_at && !appt.therapist_joined_at;
         const therapistWaiting = appt.therapist_joined_at && !appt.patient_joined_at;
 
-        if (patientWaiting && appt.therapist_phone) {
-          await sendGenericSMS(appt.therapist_phone, `Urgent: Your patient has joined the session room and is waiting for you.`);
+        if (patientWaiting) {
+          if (appt.therapist_phone && appt.therapist_phone.trim().length >= 9) {
+            await sendGenericSMS(appt.therapist_phone, `Urgent: Your patient has joined the session room and is waiting for you.`);
+          } else {
+            console.warn(`Skipping SMS: No valid phone number for therapist on appointment ${appt.id}`);
+          }
           await db.query(`UPDATE appointments SET alert_5m_sent = TRUE WHERE id = $1`, [appt.id]);
         } 
-        else if (therapistWaiting && appt.patient_phone) {
-          await sendGenericSMS(appt.patient_phone, `Urgent: Your therapist has started the session and is waiting for you in the room.`);
+        else if (therapistWaiting) {
+          if (appt.patient_phone && appt.patient_phone.trim().length >= 9) {
+            await sendGenericSMS(appt.patient_phone, `Urgent: Your therapist has started the session and is waiting for you in the room.`);
+          } else {
+            console.warn(`Skipping SMS: No valid phone number for patient on appointment ${appt.id}`);
+          }
           await db.query(`UPDATE appointments SET alert_5m_sent = TRUE WHERE id = $1`, [appt.id]);
         }
       }
     }
+
+    // --- SAFETY NET: AUTO-CLOSE ABANDONED SESSIONS ---
+    const abandonedRes = await db.query(`
+      UPDATE appointments 
+      SET status = 'completed', 
+          ended_at = last_ping_at 
+      WHERE status = 'scheduled' 
+        AND started_at IS NOT NULL 
+        AND last_ping_at < NOW() - INTERVAL '6 minutes'
+    `);
+    if (abandonedRes.rowCount > 0) {
+      console.log('Auto-closed', abandonedRes.rowCount, 'abandoned sessions');
+    }
+
+    // --- SWEEPER: EXPIRE 1-HOUR NO-SHOWS ---
+    const expiredRes = await db.query(`
+      UPDATE appointments 
+      SET status = 'expired', 
+          notes = CASE 
+            WHEN therapist_joined_at IS NOT NULL AND patient_joined_at IS NULL THEN 'System Auto-Log: Session expired. Patient no-show; Therapist was present.'
+            WHEN patient_joined_at IS NOT NULL AND therapist_joined_at IS NULL THEN 'System Auto-Log: Session expired. Therapist no-show; Patient was present.'
+            ELSE 'System Auto-Log: Session expired. Neither party joined the room.'
+          END
+      WHERE status IN ('scheduled', 'accepted') 
+        AND (appointment_date + appointment_time::time) < (NOW() - INTERVAL '1 hour')
+    `);
+    
+    if (expiredRes.rowCount > 0) {
+      console.log('Auto-expired', expiredRes.rowCount, 'sessions that passed the 1-hour mark.');
+    }
+
   } catch (error) {
     console.error('Cron Error (Appointments):', error);
   }

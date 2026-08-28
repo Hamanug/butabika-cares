@@ -50,18 +50,18 @@ router.put('/', authenticate, async (req, res) => {
     
     await db.query('UPDATE users SET email = $1 WHERE id = $2', [email, req.user.id]);
     
-    const existing = await db.query('SELECT id FROM profiles WHERE user_id = $1', [req.user.id]);
-    if (existing.rows.length > 0) {
-      await db.query(`
-        UPDATE profiles SET first_name = $1, last_name = $2, occupation = $3, bio = $4 
-        WHERE user_id = $5
-      `, [first_name, last_name, occupation, bio, req.user.id]);
-    } else {
-      await db.query(`
-        INSERT INTO profiles (user_id, first_name, last_name, occupation, bio) 
-        VALUES ($1, $2, $3, $4, $5)
-      `, [req.user.id, first_name, last_name, occupation, bio]);
-    }
+    await db.query('ALTER TABLE profiles ADD CONSTRAINT profiles_user_id_key UNIQUE (user_id);').catch(() => console.log('Constraint exists'));
+    
+    await db.query(`
+      INSERT INTO profiles (user_id, first_name, last_name, occupation, bio) 
+      VALUES ($1, $2, $3, $4, $5) 
+      ON CONFLICT (user_id) 
+      DO UPDATE SET 
+        first_name = EXCLUDED.first_name, 
+        last_name = EXCLUDED.last_name,
+        occupation = EXCLUDED.occupation,
+        bio = EXCLUDED.bio
+    `, [req.user.id, first_name, last_name, occupation, bio]);
     
     await db.query('COMMIT');
     
@@ -76,7 +76,8 @@ router.put('/', authenticate, async (req, res) => {
     res.json({ message: 'Profile updated', user: result.rows[0] });
   } catch (error) { 
     await db.query('ROLLBACK');
-    res.status(500).json({ error: 'Server error' }); 
+    console.error("CRITICAL DB ERROR IN PUT /profile:", error);
+    res.status(500).json({ error: "Failed to save profile", details: error.message }); 
   }
 });
 

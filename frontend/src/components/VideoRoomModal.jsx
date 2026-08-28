@@ -17,6 +17,18 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
     }
   }, [appointment?.id]);
 
+  // Heartbeat tracking
+  useEffect(() => {
+    let interval;
+    if (isOpen && appointment?.id) {
+      interval = setInterval(() => {
+        axios.patch(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/ping`, {}, { withCredentials: true })
+          .catch(err => console.error('Heartbeat failed:', err));
+      }, 60000);
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, appointment?.id]);
+
   useEffect(() => {
     if (isOpen && appointment && isTherapist) {
       setNotes(appointment.notes || '');

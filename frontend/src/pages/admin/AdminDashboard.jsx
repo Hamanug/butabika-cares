@@ -71,7 +71,11 @@ export default function AdminDashboard() {
       setTSuccess('Therapist profile created successfully.');
       setTFirstName(''); setTLastName(''); setTEmail(''); setTPhone(''); setTPassword(''); setTSpecialization(''); setTCredentials('');
     } catch (err) {
-      setTError('Failed to create therapist profile.');
+      if (err.response && err.response.data && err.response.data.error) {
+        setTError(err.response.data.error);
+      } else {
+        setTError('Failed to create therapist profile.');
+      }
     }
   };
 
@@ -264,38 +268,38 @@ export default function AdminDashboard() {
             <div>
               <h2 className="text-lg font-semibold text-slate-800 mb-6">Onboard New Therapist</h2>
               {tSuccess && <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm mb-6 border border-green-100">{tSuccess}</div>}
-              {tError && <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-6 border border-red-100">{tError}</div>}
+              {tError && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 font-medium">{tError}</div>}
               
               <form onSubmit={handleCreateTherapist} className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                    <input type="text" required value={tFirstName} onChange={e => setTFirstName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" required value={tFirstName} onChange={e => { setTFirstName(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                    <input type="text" required value={tLastName} onChange={e => setTLastName(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" required value={tLastName} onChange={e => { setTLastName(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                    <input type="email" required value={tEmail} onChange={e => setTEmail(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="email" required value={tEmail} onChange={e => { setTEmail(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                    <input type="text" required value={tPhone} onChange={e => setTPhone(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <input type="text" required value={tPhone} onChange={e => { setTPhone(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Temporary Password</label>
-                  <input type="password" required value={tPassword} onChange={e => setTPassword(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <input type="password" required value={tPassword} onChange={e => { setTPassword(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
-                  <input type="text" required value={tSpecialization} onChange={e => setTSpecialization(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Clinical Psychologist" />
+                  <input type="text" required value={tSpecialization} onChange={e => { setTSpecialization(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Clinical Psychologist" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Professional Credentials</label>
-                  <textarea required value={tCredentials} onChange={e => setTCredentials(e.target.value)} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="License numbers, degrees, etc."></textarea>
+                  <textarea required value={tCredentials} onChange={e => { setTCredentials(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="License numbers, degrees, etc."></textarea>
                 </div>
                 <button type="submit" className="w-full bg-teal-700 hover:bg-teal-800 text-white py-3 rounded-lg font-medium transition-colors">
                   Create Therapist Profile

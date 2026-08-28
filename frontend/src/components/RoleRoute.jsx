@@ -3,8 +3,10 @@ import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 const RoleRoute = ({ children, allowedRole, redirectTo }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
   
+  if (isLoading) return <div className="flex h-screen items-center justify-center">Loading session...</div>;
+
   if (!user) {
     return <Navigate to="/auth" replace />;
   }

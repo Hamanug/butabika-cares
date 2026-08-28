@@ -15,6 +15,7 @@ export default function TherapistDashboard() {
   // Core State
   const [pendingRequests, setPendingRequests] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [pastSessions, setPastSessions] = useState([]);
   const [patients, setPatients] = useState([]);
   const [activeTab, setActiveTab] = useState('appointments');
   
@@ -34,6 +35,7 @@ export default function TherapistDashboard() {
       
       const sessionsRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments/my-sessions`, { withCredentials: true });
       setSessions(sessionsRes.data.filter(s => s.status === 'scheduled'));
+      setPastSessions(sessionsRes.data.filter(s => s.status === 'completed'));
 
       const patientsRes = await axios.get(`${import.meta.env.VITE_API_URL}/api/therapists/roster`, { withCredentials: true });
       setPatients(patientsRes.data);
@@ -182,15 +184,20 @@ export default function TherapistDashboard() {
                 ) : (
                   <div className="space-y-4">
                     {pendingRequests.map(req => (
-                      <div key={req.id} className="border border-slate-100 rounded-lg p-4 bg-slate-50">
+                      <div 
+                        key={req.id} 
+                        onClick={() => navigate(`/therapist/patient/${req.patient_id}`)}
+                        className="border border-slate-100 rounded-lg p-4 bg-white cursor-pointer hover:bg-slate-50 transition-colors"
+                      >
                         <div className="font-medium text-slate-900 mb-1">
-                          {formatPatientName({ first_name: req.other_first, last_name: req.other_last, display_id: req.other_display_id })}
+                          {formatPatientName({ first_name: req.other_first, last_name: req.other_last, display_id: req.other_display_id || req.patient_id })}
                         </div>
-                        <div className="text-sm text-slate-600 mb-3">
-                          {req.appointment_date?.split('T')[0]} at {req.time}
+                        <div className="text-sm text-slate-600 mt-2 space-y-1 mb-3">
+                          <p><span className="font-medium text-slate-800">Scheduled for:</span> {req.appointment_date?.split('T')[0]} at {req.appointment_time}</p>
+                          <p className="text-xs text-slate-400">Requested on: {new Date(req.created_at).toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
                         </div>
                         <button 
-                          onClick={() => handleAcceptRequest(req.id)}
+                          onClick={(e) => { e.stopPropagation(); handleAcceptRequest(req.id); }}
                           disabled={isProcessing === req.id}
                           className="w-full flex items-center justify-center py-2 px-4 bg-warm-500 hover:bg-warm-600 text-white rounded-md text-sm font-medium transition-colors disabled:opacity-50"
                         >
@@ -277,6 +284,55 @@ export default function TherapistDashboard() {
                   </div>
                 )}
               </div>
+
+              {/* Session History */}
+              <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5 mt-8">
+                <h3 className="text-lg font-medium text-slate-900 mb-4 flex items-center">
+                  <Clock className="h-5 w-5 mr-2 text-slate-600" />
+                  Session History
+                </h3>
+                
+                {pastSessions.length === 0 ? (
+                  <div className="text-center py-8 bg-slate-50 rounded-lg border border-dashed border-slate-200">
+                    <p className="text-slate-600 font-medium">No past sessions yet</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {pastSessions.slice(0, 5).map(session => (
+                      <div 
+                        key={session.id}
+                        onClick={() => navigate(`/therapist/patient/${session.patient_id}`)}
+                        className="p-4 border border-slate-200 rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer hover:bg-slate-50 transition-colors"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <User className="h-4 w-4 text-slate-500" />
+                            <span className="font-medium text-slate-900">
+                              {formatPatientName({ first_name: session.other_first, last_name: session.other_last, display_id: session.other_display_id })}
+                            </span>
+                          </div>
+                          <div className="text-sm text-slate-500 flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {session.appointment_date?.split('T')[0]} at {session.time || session.appointment_time}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm text-slate-500 mr-2 flex items-center gap-1">
+                              <Clock className="h-3 w-3" />
+                              {session.duration_minutes ? `${session.duration_minutes} mins` : 'Duration unavailable'}
+                            </span>
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+                                Completed
+                            </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <div className="mt-4 pt-4 border-t border-slate-100 flex justify-center">
+                  <button onClick={() => navigate('/therapist/history')} className="text-sm font-medium text-blue-600 hover:text-blue-700">View Full History &rarr;</button>
+                </div>
+              </div>
             </div>
             
           </div>
@@ -322,7 +378,7 @@ export default function TherapistDashboard() {
                               {patient.first_name?.[0] || 'P'}
                             </div>
                             <span className="font-medium text-slate-900">
-                              {formatPatientName(patient)}
+                              {formatPatientName({ first_name: patient.first_name, last_name: patient.last_name, display_id: patient.display_id })}
                             </span>
                           </div>
                         </td>
