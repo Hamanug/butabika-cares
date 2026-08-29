@@ -187,19 +187,5 @@ router.post('/therapist/login', async (req, res) => {
   } catch (error) { res.status(500).json({ error: 'Internal server error' }); }
 });
 
-router.post('/admin/login', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ error: 'email and password are required' });
-    const userResult = await db.query('SELECT u.*, p.first_name, p.last_name FROM users u LEFT JOIN profiles p ON u.id = p.user_id WHERE u.email = $1 AND u.role = $2', [email.toLowerCase(), 'admin']);
-    const user = userResult.rows[0];
-    if (!user || !user.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
-    const validPassword = await bcrypt.compare(password, user.password_hash);
-    if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
-    const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
-    res.cookie('auth_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 8 * 60 * 60 * 1000 });
-    res.json({ message: 'Logged in successfully', user: { id: user.id, email: user.email, role: user.role, display_id: user.display_id, first_name: user.first_name, last_name: user.last_name } });
-  } catch (error) { res.status(500).json({ error: 'Internal server error' }); }
-});
-
 module.exports = router;
+

@@ -8,7 +8,7 @@ import toast from 'react-hot-toast';
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
-  const { user, logout } = useAuth(); // Or use localStorage logic if AuthContext isn't globally wired for admins yet
+  const { user, logout } = useAuth();
 
   const [tFirstName, setTFirstName] = useState('');
   const [tLastName, setTLastName] = useState('');
@@ -79,18 +79,8 @@ export default function AdminDashboard() {
     }
   };
 
-  // Basic route protection
-  useEffect(() => {
-    const token = localStorage.getItem('admin_token');
-    if (!token && (!user || user.role !== 'admin')) {
-      navigate('/admin/login');
-    }
-  }, [user, navigate]);
-
   const handleLogout = () => {
-    if (logout) logout();
-    localStorage.removeItem('admin_token');
-    localStorage.removeItem('admin_user');
+    logout();
     navigate('/admin/login');
   };
 
@@ -208,11 +198,13 @@ export default function AdminDashboard() {
                     </thead>
                     <tbody>
                       {crisisAlerts.map(alert => (
-                        <tr key={alert.id} className="border-b border-slate-100 hover:bg-slate-50">
-                          <td className="p-3 text-sm text-slate-600">{new Date(alert.created_at).toLocaleDateString()}</td>
-                          <td className="p-3 text-sm font-medium text-slate-800">{alert.first_name} {alert.last_name}</td>
-                          <td className="p-3 text-sm text-slate-600">{alert.phone_number || alert.email}</td>
-                          <td className="p-3 text-sm font-bold text-red-600">{alert.score}</td>
+                        <tr key={alert.id} className="border-b border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors">
+                          <td className="p-3 text-sm font-medium text-rose-700">{new Date(alert.created_at).toLocaleDateString()}</td>
+                          <td className="p-3 text-sm font-bold text-rose-900">{alert.first_name} {alert.last_name}</td>
+                          <td className="p-3 text-sm font-medium text-rose-700">{alert.phone_number || alert.email}</td>
+                          <td className="p-3 text-sm font-extrabold text-red-700 flex items-center gap-1">
+                            <span className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs">Score: {alert.score}</span>
+                          </td>
                         </tr>
                       ))}
                     </tbody>

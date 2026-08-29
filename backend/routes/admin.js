@@ -2,6 +2,8 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../db');
+const authenticateToken = require('../middleware/auth');
+const isAdmin = require('../middleware/isAdmin');
 
 const router = express.Router();
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_change_me';
@@ -46,14 +48,12 @@ router.post('/auth/login', async (req, res) => {
     res.cookie('auth_token', token, { 
       httpOnly: true, 
       secure: process.env.NODE_ENV === 'production', 
-      sameSite: 'strict', 
-      maxAge: 8 * 60 * 60 * 1000 
+      maxAge: 86400000
     });
     
     res.json({ 
       message: 'Admin logged in successfully', 
-      token, 
-      user: { id: user.id, email: user.email, role: user.role, isAdmin: true } 
+      user: { id: user.id, email: user.email, role: 'admin' } 
     });
   } catch (error) {
     console.error('Admin login error:', error);
@@ -62,7 +62,7 @@ router.post('/auth/login', async (req, res) => {
 });
 
 // POST /api/admin/therapists
-router.post('/therapists', async (req, res) => {
+router.post('/therapists', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const { first_name, last_name, email, phone_number, password, specialization, credentials } = req.body;
     
@@ -87,7 +87,7 @@ router.post('/therapists', async (req, res) => {
 });
 
 // GET /api/admin/sms-balance
-router.get('/sms-balance', async (req, res) => {
+router.get('/sms-balance', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const axios = require('axios');
     const payload = {
@@ -106,14 +106,15 @@ router.get('/sms-balance', async (req, res) => {
 });
 
 // GET /api/admin/crisis-alerts
-router.get('/crisis-alerts', async (req, res) => {
+router.get('/crisis-alerts', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const result = await db.query(`
       SELECT sr.*, u.first_name, u.last_name, u.email, u.phone_number 
       FROM screening_results sr
       JOIN users u ON sr.patient_id = u.id
-      WHERE sr.screening_type = 'Suicide Risk' AND sr.score >= 5
+      WHERE sr.screening_type IN ('Suicide Risk', 'SUICIDE_RISK') AND sr.score >= 5
       ORDER BY sr.created_at DESC
+      LIMIT 50
     `);
     res.json(result.rows);
   } catch (error) {
@@ -123,7 +124,7 @@ router.get('/crisis-alerts', async (req, res) => {
 });
 
 // PUT /api/admin/users/:id/status
-router.put('/users/:id/status', async (req, res) => {
+router.put('/users/:id/status', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const { is_active } = req.body;
     await db.query('UPDATE users SET is_active = $1 WHERE id = $2', [is_active, req.params.id]);
@@ -135,7 +136,7 @@ router.put('/users/:id/status', async (req, res) => {
 });
 
 // GET /api/admin/analytics
-router.get('/analytics', async (req, res) => {
+router.get('/analytics', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const totalUsers = await db.query("SELECT COUNT(*) FROM users WHERE role = 'patient'");
     const activeTherapists = await db.query("SELECT COUNT(*) FROM users WHERE role = 'therapist' AND is_active = TRUE");
@@ -153,7 +154,7 @@ router.get('/analytics', async (req, res) => {
 });
 
 // GET /api/admin/users
-router.get('/users', async (req, res) => {
+router.get('/users', [authenticateToken, isAdmin], async (req, res) => {
   try {
     const result = await db.query("SELECT id, first_name, last_name, email, role, is_active FROM users ORDER BY created_at DESC");
     res.json(result.rows);

@@ -51,12 +51,6 @@ export const AuthProvider = ({ children }) => {
   // 3. Initial Hydration Check
   useEffect(() => {
     const checkSession = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
       try {
         const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/auth/me`);
         if (response.data.authenticated) {
@@ -74,10 +68,7 @@ export const AuthProvider = ({ children }) => {
     checkSession();
   }, []);
 
-  const login = (userData, token) => {
-    if (token) {
-      localStorage.setItem('token', token);
-    }
+  const login = (userData) => {
     setUser(userData);
   };
 
@@ -87,7 +78,6 @@ export const AuthProvider = ({ children }) => {
     } catch(err) {
       console.error(err);
     }
-    localStorage.removeItem('token');
     setUser(null);
   };
 

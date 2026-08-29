@@ -21,7 +21,7 @@ export default function TherapistAuth() {
     setError(''); setLoading(true);
     try {
       const res = await axios.post('/api/auth/therapist/login', { identifier: identifier.trim(), password: password.trim() });
-      login(res.data.user, res.data.token);
+      login(res.data.user);
       navigate('/therapist/dashboard');
     } catch (err) {
       setError(err.response?.data?.error || 'Invalid credentials.');

@@ -103,7 +103,7 @@ const Auth = () => {
     if (!isSignUp) {
       try {
         const res = await axios.post('/api/auth/login', { phone_number: formattedPhone, password: password.trim() });
-        login(res.data.user, res.data.token);
+        login(res.data.user);
         await resolvePendingActions();
         const intendedRoute = sessionStorage.getItem('intendedRoute');
         if (intendedRoute) {
@@ -159,7 +159,7 @@ const Auth = () => {
     setSuccessMessage('');
     try {
       const res = await axios.post('/api/auth/patient/verify-otp', { phone_number: formattedPhone, otp_code: otp, password: password.trim(), date_of_birth: dateOfBirth });
-      login(res.data.user, res.data.token);
+      login(res.data.user);
       await resolvePendingActions();
       const intendedRoute = sessionStorage.getItem('intendedRoute');
       if (intendedRoute) {

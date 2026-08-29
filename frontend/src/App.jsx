@@ -76,7 +76,11 @@ const App = () => {
               <Route path="/auth" element={<Auth />} />
               <Route path="/therapist/auth" element={<TherapistAuth />} />
               <Route path="/admin/login" element={<AdminAuth />} />
-              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/dashboard" element={
+                <RoleRoute allowedRole="admin" redirectTo="/admin/login">
+                  <AdminDashboard />
+                </RoleRoute>
+              } />
               <Route path="/about" element={<StrictRoleGuard><About /></StrictRoleGuard>} />
               <Route path="/resources" element={<StrictRoleGuard><Resources /></StrictRoleGuard>} />
               <Route path="/journal" element={<Journal />} />

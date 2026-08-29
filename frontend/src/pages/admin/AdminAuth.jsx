@@ -25,14 +25,9 @@ const AdminAuth = () => {
         { withCredentials: true }
       );
       
-      const { user, token } = response.data;
+      const { user } = response.data;
       
-      if (login) {
-        login(user, token);
-      } else {
-        localStorage.setItem('admin_token', token);
-        localStorage.setItem('admin_user', JSON.stringify(user));
-      }
+      login(user);
       
       navigate('/admin/dashboard');
     } catch (err) {
