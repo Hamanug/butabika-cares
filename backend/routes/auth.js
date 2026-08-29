@@ -181,6 +181,11 @@ router.post('/therapist/login', async (req, res) => {
     if (!user || !user.password_hash) return res.status(401).json({ error: 'Invalid credentials' });
     const validPassword = await bcrypt.compare(password, user.password_hash);
     if (!validPassword) return res.status(401).json({ error: 'Invalid credentials' });
+
+    if (user.requires_password_change) {
+      return res.json({ requireReset: true, userId: user.id });
+    }
+
     const token = jwt.sign({ id: user.id, role: user.role }, JWT_SECRET, { expiresIn: '8h' });
     res.cookie('auth_token', token, { httpOnly: true, secure: process.env.NODE_ENV === 'production', sameSite: 'strict', maxAge: 8 * 60 * 60 * 1000 });
     res.json({ message: 'Logged in successfully', user: { id: user.id, email: user.email, phone_number: user.phone_number, role: user.role, display_id: user.display_id, first_name: user.first_name, last_name: user.last_name } });

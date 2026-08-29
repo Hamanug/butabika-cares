@@ -7,36 +7,45 @@ export default {
   theme: {
     extend: {
       colors: {
-        cyan: { 50: '#ECFEFF', 100: '#CFFAFE', 200: '#A5F3FC', 300: '#67E8F0', 400: '#22D3EE', 500: '#06B6D4', 600: '#0891B2', 800: '#155E75' },
-        fuchsia: { 50: '#FDF4FF', 200: '#F5D0FE', 600: '#C026D3' },
-        serene: { 50: '#F0F4F8', 100: '#D9E2EC', 200: '#BCCCDC', 500: '#7896B9', 600: '#486581', 700: '#334E68', 800: '#243B53', 900: '#102A43' },
-        sage: { 50: '#F3F6F4', 100: '#E2EBE5', 200: '#C7D8CE' },
-        warm: { 50: '#FFF7ED', 100: '#FFEDD5', 200: '#FED7AA', 500: '#F97316', 600: '#EA580C', 700: '#C2410C', 800: '#9A3412', 900: '#7C2D12' }
+        background: '#F8FAFC', // slate-50
+        surface: '#FFFFFF',
+        primary: {
+          DEFAULT: '#0F766E', // teal-700
+          hover: '#115E59',   // teal-800
+          light: '#CCFBF1',   // teal-50
+        },
+        muted: {
+          DEFAULT: '#64748B', // slate-500
+          light: '#F1F5F9',   // slate-100
+        },
+        destructive: {
+          DEFAULT: '#E11D48', // rose-600 (calmer than pure red)
+          light: '#FFE4E6',   // rose-50
+        },
+        border: '#E2E8F0',    // slate-200
+      },
+      fontFamily: {
+        sans: ['Lato', 'sans-serif'],
+        heading: ['Poppins', 'sans-serif'], // Corrected from serif to sans-serif
+      },
+      boxShadow: {
+        'soft': '0 4px 20px -2px rgba(15, 23, 42, 0.05)',
+        'card': '0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.04)',
       },
       keyframes: {
         breathe: {
           '0%, 100%': { transform: 'scale(0.9)', opacity: '0.7' },
           '50%': { transform: 'scale(1.1)', opacity: '1' }
         },
-        float: {
-          '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-20px)' }
-        },
-        teardrop: {
-          '0%': { transform: 'scaleY(0)', opacity: '0' },
-          '50%': { transform: 'scaleY(1)', opacity: '1' },
-          '100%': { transform: 'scaleY(0) translateY(20px)', opacity: '0' }
+        'fade-in-up': {
+          '0%': { opacity: '0', transform: 'translateY(15px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' },
         }
       },
       animation: {
-        breathe: 'breathe 4s infinite ease-in-out',
-        float: 'float 6s ease-in-out infinite',
-        teardrop: 'teardrop 2s ease-in-out infinite'
+        breathe: 'breathe 6s infinite ease-in-out',
+        'fade-in-up': 'fade-in-up 0.6s ease-out forwards',
       },
-      fontFamily: {
-        sans: ['Lato', 'sans-serif'],
-        serif: ['Poppins', 'serif']
-      }
     },
   },
   plugins: [],

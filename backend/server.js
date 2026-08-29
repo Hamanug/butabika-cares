@@ -11,6 +11,7 @@ const path = require('path');
 const fs = require('fs');
 const db = require('./db');
 require('./services/cronService');
+require('./services/healthMonitor');
 
 // Auto-migrate appointments table
 db.query(`

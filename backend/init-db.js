@@ -4,6 +4,13 @@ const initializeDatabase = async () => {
   const queries = `
     CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
+    CREATE TABLE IF NOT EXISTS pre_approved_admins (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      email VARCHAR(255) UNIQUE NOT NULL,
+      admin_tier VARCHAR(50) DEFAULT 'clinical_admin',
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
     DROP TABLE IF EXISTS users, patients, otps CASCADE;
 
     CREATE TABLE IF NOT EXISTS users (
@@ -14,6 +21,14 @@ const initializeDatabase = async () => {
       role VARCHAR(50) DEFAULT 'patient',
       password_hash VARCHAR(255),
       is_phone_verified BOOLEAN DEFAULT FALSE,
+      requires_password_change BOOLEAN DEFAULT FALSE,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS system_logs (
+      id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+      level VARCHAR(20) NOT NULL,
+      message TEXT NOT NULL,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 
