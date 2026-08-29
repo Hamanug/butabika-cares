@@ -19,17 +19,11 @@ const authenticate = (req, res, next) => {
 // GET /api/messages/unread-count
 router.get('/unread-count', authenticate, async (req, res) => {
   try {
-    let unreadCount = 0;
-    try {
-        const result = await db.query(`
-          SELECT count(*) FROM messages 
-          WHERE recipient_id = $1 AND is_read = false
-        `, [req.user.id]);
-        unreadCount = parseInt(result.rows[0].count, 10);
-    } catch(e) {
-        unreadCount = 2; // For demonstration purposes
-    }
-    
+    const result = await db.query(`
+      SELECT count(*) FROM messages 
+      WHERE recipient_id = $1 AND is_read = false
+    `, [req.user.id]);
+    const unreadCount = parseInt(result.rows[0].count, 10);
     res.json({ count: unreadCount });
   } catch (err) {
     console.error('Failed to fetch unread count:', err);
@@ -47,17 +41,18 @@ router.get('/contacts', authenticate, async (req, res) => {
     let params = [];
 
     if (role === 'patient') {
-      // Patients can see all active therapists (handles legacy NULL is_active)
+      // Patients only see therapists they have an existing message history with
       query = `
-        SELECT u.id, p.first_name, p.last_name, u.display_id, tp.specialization as specialty, tp.profile_picture,
+        SELECT DISTINCT u.id, p.first_name, p.last_name, u.display_id, tp.specialization as specialty, tp.profile_picture,
         (SELECT COUNT(*) FROM messages m2 WHERE m2.sender_id = u.id AND m2.recipient_id = $1 AND m2.is_read = FALSE)::int as unread_count
-        FROM users u
+        FROM messages m
+        JOIN users u ON (m.sender_id = u.id OR m.recipient_id = u.id)
         LEFT JOIN profiles p ON u.id = p.user_id
         LEFT JOIN therapist_profiles tp ON u.id = tp.user_id
-        WHERE u.role = 'therapist' AND (u.is_active = TRUE OR u.is_active IS NULL)
+        WHERE (m.recipient_id = $1 OR m.sender_id = $1) AND u.id != $1 AND u.role = 'therapist'
         ORDER BY p.first_name ASC
       `;
-      params = [userId]; // Needed to calculate patient's unread_count
+      params = [userId];
     } else if (role === 'therapist') {
       // Therapists see patients with active message history.
       // COALESCE ensures anonymous patients render safely as "Patient [DisplayID]".

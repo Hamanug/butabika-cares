@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { BookOpen, User, Loader2, X, PhoneCall, Clock } from 'lucide-react';
+import { BookOpen, User, Loader2, X, PhoneCall, Clock, MessageCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
@@ -19,6 +19,29 @@ export default function Therapists() {
   const [sessionTime, setSessionTime] = useState('');
 
   const { onlineUsers } = useSocket();
+  const [genderPreference, setGenderPreference] = useState('All');
+  const [bookedSlots, setBookedSlots] = useState([]);
+
+  // Fetch booked slots when date or therapist changes
+  useEffect(() => {
+    if (!selectedTherapist || !sessionDate) {
+      setBookedSlots([]);
+      return;
+    }
+    const fetchBookedSlots = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments/booked-times`, {
+          params: { therapist_id: selectedTherapist.id, date: sessionDate },
+          withCredentials: true
+        });
+        setBookedSlots(res.data);
+      } catch (err) {
+        console.error('Failed to fetch booked slots', err);
+        setBookedSlots([]);
+      }
+    };
+    fetchBookedSlots();
+  }, [selectedTherapist, sessionDate]);
 
   useEffect(() => {
     const fetchTherapists = async () => {
@@ -44,8 +67,8 @@ export default function Therapists() {
 
     // Strict UI Time Validation
     const [hours, minutes] = sessionTime.split(':').map(Number);
-    if (hours < 8 || hours >= 20) {
-      return toast.error("Please select a time between 8:00 AM and 8:00 PM.");
+    if (hours < 8 || hours > 16) {
+      return toast.error("Please select a time between 8:00 AM and 4:00 PM.");
     }
 
     if (!user) {
@@ -80,12 +103,56 @@ export default function Therapists() {
     }
   };
 
+  const sortLoadBalanced = (a, b) => {
+    const nameA = `${a.first_name || ''} ${a.last_name || ''}`.toLowerCase();
+    const nameB = `${b.first_name || ''} ${b.last_name || ''}`.toLowerCase();
+    
+    // 1. VIP Shuffle (Grace and Ivan share Slot 1 & 2 dynamically)
+    const isVipA = (nameA.includes('grace') && nameA.includes('bikumbi')) || nameA.includes('musenero');
+    const isVipB = (nameB.includes('grace') && nameB.includes('bikumbi')) || nameB.includes('musenero');
+    
+    if (isVipA && isVipB) return Math.random() - 0.5;
+    if (isVipA && !isVipB) return -1;
+    if (!isVipA && isVipB) return 1;
+    
+    // 2. Availability Boost (Online users bubble up)
+    const isAOnline = onlineUsers.includes(a.id);
+    const isBOnline = onlineUsers.includes(b.id);
+    if (isAOnline && !isBOnline) return -1;
+    if (!isAOnline && isBOnline) return 1;
+    
+    // 3. Load Balance (Least sessions first)
+    const countA = parseInt(a.session_count) || 0;
+    const countB = parseInt(b.session_count) || 0;
+    return countA - countB;
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 pt-24 pb-20">
       <div className="container max-w-4xl mx-auto px-4">
         <div className="mb-10">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Our Therapists</h1>
           <p className="text-slate-600">Browse our mental health professionals and request a therapy session.</p>
+        </div>
+
+        {/* Matching Wizard Filter */}
+        <div className="mb-8">
+          <p className="text-sm font-semibold text-slate-700 mb-3">Do you have a preference?</p>
+          <div className="flex flex-wrap gap-3">
+            {['All', 'Male', 'Female'].map(option => (
+              <button
+                key={option}
+                onClick={() => setGenderPreference(option)}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
+                  genderPreference === option 
+                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm' 
+                    : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                }`}
+              >
+                {option === 'All' ? 'No Preference' : `${option} Therapist`}
+              </button>
+            ))}
+          </div>
         </div>
 
         {isLoading ? (
@@ -100,7 +167,7 @@ export default function Therapists() {
           </div>
         ) : (
           <div className="space-y-6">
-            {(therapists || []).map(therapist => {
+            {[...(therapists || [])].filter(t => genderPreference === 'All' || (t.gender && t.gender.toLowerCase() === genderPreference.toLowerCase())).sort(sortLoadBalanced).map(therapist => {
               const isOnline = onlineUsers.includes(therapist.id);
               return (
                 <div key={therapist.id} className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 flex flex-col md:flex-row gap-6 transition-all hover:shadow-md">
@@ -123,6 +190,11 @@ export default function Therapists() {
                           <BookOpen className="h-4 w-4 mr-1 text-slate-400" />
                           {therapist.occupation || 'Pending Assignment'}
                         </div>
+                        {therapist.gender && (
+                          <span className="inline-block bg-slate-100 text-slate-500 text-xs px-2 py-1 rounded-md mt-2 mb-2 border border-slate-200">
+                            {therapist.gender}
+                          </span>
+                        )}
                       </div>
                       <span className={`hidden md:inline-block px-3 py-1 text-xs font-medium rounded-full border ${isOnline ? 'bg-green-50 text-green-700 border-green-200' : 'bg-slate-50 text-slate-500 border-slate-200'}`}>
                         {isOnline ? 'Online' : 'Offline'}
@@ -131,7 +203,7 @@ export default function Therapists() {
                     <div className="mt-4 p-4 bg-slate-50 rounded-lg text-sm text-slate-700 border border-slate-100 whitespace-pre-wrap">
                       {therapist.bio || 'Professional credentials and specialization details.'}
                     </div>
-                    <div className="mt-6">
+                    <div className="mt-6 flex flex-wrap gap-3">
                       <button
                         onClick={() => {
                           if (user) {
@@ -144,6 +216,19 @@ export default function Therapists() {
                         className="flex items-center justify-center gap-2 bg-[#e87a5d] hover:bg-[#d6694c] text-white px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
                       >
                         <PhoneCall className="h-4 w-4"/> Request Session
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (user) {
+                            navigate(`/messages?userId=${therapist.id}&firstName=${encodeURIComponent(therapist.first_name || '')}&lastName=${encodeURIComponent(therapist.last_name || '')}`);
+                          } else {
+                            sessionStorage.setItem('intendedRoute', `/messages?userId=${therapist.id}`);
+                            navigate('/auth');
+                          }
+                        }}
+                        className="flex items-center justify-center gap-2 bg-white text-[#e87a5d] border border-[#e87a5d] hover:bg-orange-50 px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
+                      >
+                        <MessageCircle className="h-4 w-4"/> Send Message
                       </button>
                     </div>
                   </div>
@@ -178,27 +263,42 @@ export default function Therapists() {
                   <input 
                     type="date" 
                     value={sessionDate} 
-                    onChange={(e) => setSessionDate(e.target.value)} 
+                    onChange={(e) => { setSessionDate(e.target.value); setSessionTime(''); }} 
                     min={new Date().toISOString().split('T')[0]} 
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" 
                     required 
                   />
                 </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Time</label>
-                  <input 
-                    type="time" 
-                    value={sessionTime} 
-                    onChange={(e) => setSessionTime(e.target.value)} 
-                    min="08:00"
-                    max="20:00"
-                    className="w-full px-3 py-2 border border-slate-300 rounded-lg shadow-sm focus:outline-none focus:border-blue-500 focus:ring-blue-500 text-sm" 
-                    required 
-                  />
-                </div>
               </div>
-              <p className="text-xs text-slate-500 mb-4 font-medium flex items-center gap-1">
-                <Clock className="w-3 h-3" /> Clinical hours are strictly 8:00 AM to 8:00 PM (EAT).
+              {sessionDate && (
+                <div className="mt-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">Select Time</label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00'].map((time) => {
+                      const isBooked = bookedSlots.includes(`${time}:00`);
+                      return (
+                        <button
+                          key={time}
+                          type="button"
+                          disabled={isBooked}
+                          onClick={() => setSessionTime(time)}
+                          className={`py-2 px-3 text-sm rounded-md border text-center transition-colors ${
+                            isBooked 
+                              ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed line-through' 
+                              : sessionTime === time 
+                                ? 'bg-orange-500 text-white border-orange-500' 
+                                : 'bg-white text-slate-700 border-slate-300 hover:border-orange-500'
+                          }`}
+                        >
+                          {time}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+              <p className="text-xs text-slate-500 mb-4 mt-4 font-medium flex items-center gap-1">
+                <Clock className="w-3 h-3" /> Clinical hours are strictly 8:00 AM to 4:00 PM (EAT).
               </p>
               <label className="block text-sm font-medium text-slate-700 mb-2">
                 What would you like to discuss? (Optional)

@@ -3,26 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import toast from 'react-hot-toast';
-
-const QUESTIONS = [
-  "How often have you felt overwhelmed by your responsibilities?",
-  "How often have you felt unable to control the important things in your life?",
-  "How often have you felt physically and emotionally exhausted?",
-  "How often have you felt nervous and 'stressed'?",
-  "How often have you felt that difficulties were piling up so high that you could not overcome them?"
-];
-
-const OPTIONS = [
-  { label: "Never", value: 0 },
-  { label: "Sometimes", value: 1 },
-  { label: "Often", value: 2 },
-  { label: "Almost Always", value: 3 }
-];
+import { ASSESSMENTS_DATA, getScoreInterpretation } from '../utils/screeningUtils';
 
 export default function StressManagement() {
   const navigate = useNavigate();
   const { user } = useAuth();
   
+  const stressQuestions = ASSESSMENTS_DATA["STRESS"] || [];
   const [answers, setAnswers] = useState({});
 
   const handleAnswer = (qIndex, val) => {
@@ -30,7 +17,7 @@ export default function StressManagement() {
   };
 
   const calculateScore = () => {
-    if (Object.keys(answers).length === QUESTIONS.length) {
+    if (Object.keys(answers).length === stressQuestions.length && stressQuestions.length > 0) {
       return Object.values(answers).reduce((acc, curr) => acc + curr, 0);
     }
     return null;
@@ -39,23 +26,25 @@ export default function StressManagement() {
   const score = calculateScore();
 
   const getTierAndFeedback = (score) => {
-    if (score <= 5) return { tier: "Low", color: "text-green-700 bg-green-50 border-green-200", feedback: "You're managing stress well. Continue your current healthy habits and remember to take breaks." };
-    if (score <= 10) return { tier: "Moderate", color: "text-amber-700 bg-amber-50 border-amber-200", feedback: "You're experiencing moderate stress. Consider incorporating mindfulness or deep breathing exercises into your daily routine." };
-    return { tier: "High", color: "text-rose-700 bg-rose-50 border-rose-200", feedback: "Your stress levels are high. It is highly recommended to speak with a professional or try our cognitive reframing tools." };
+    const interpretation = getScoreInterpretation('STRESS', score);
+    if (score <= 5) return { tier: interpretation.severity, color: "text-green-700 bg-green-50 border-green-200", feedback: "You're managing stress well. Continue your current healthy habits and remember to take breaks." };
+    if (score <= 10) return { tier: interpretation.severity, color: "text-amber-700 bg-amber-50 border-amber-200", feedback: "You're experiencing moderate stress. Consider incorporating mindfulness or deep breathing exercises into your daily routine." };
+    return { tier: interpretation.severity, color: "text-rose-700 bg-rose-50 border-rose-200", feedback: "Your stress levels are high. It is highly recommended to speak with a professional or try our cognitive reframing tools." };
   };
 
   const handleSave = async () => {
     if (score === null) return;
 
+    const payload = { score, maxScore: 15, date: new Date().toISOString(), answers };
+
     if (!user) {
-      const pendingStressScore = { score, maxScore: 15, date: new Date().toISOString() };
-      sessionStorage.setItem('pendingStressScore', JSON.stringify(pendingStressScore));
+      sessionStorage.setItem('pendingStressScore', JSON.stringify(payload));
       navigate('/auth');
       return;
     }
 
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/stress-tracking`, { score, maxScore: 15, date: new Date().toISOString() }, { withCredentials: true });
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/stress-tracking`, payload, { withCredentials: true });
       toast.success('Saved successfully');
     } catch (error) {
       console.error("Failed to save stress score:", error);
@@ -70,19 +59,19 @@ export default function StressManagement() {
         <p className="text-slate-600 mb-8">Reflect on your feelings and thoughts during the last week. This tool helps quantify your stress level to recommend appropriate coping strategies.</p>
         
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-6 mb-6">
-          {QUESTIONS.map((question, qIndex) => (
+          {stressQuestions.map((qItem, qIndex) => (
             <div key={qIndex} className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <p className="font-medium text-slate-700 mb-4">{qIndex + 1}. {question}</p>
+              <p className="font-medium text-slate-700 mb-4">{qIndex + 1}. {qItem.question}</p>
               <div className="flex flex-wrap gap-3">
-                {OPTIONS.map((opt, oIndex) => {
-                  const isSelected = answers[qIndex] === opt.value;
+                {qItem.options.map((optLabel, optIndex) => {
+                  const isSelected = answers[qIndex] === optIndex;
                   return (
                     <button 
-                      key={oIndex}
-                      onClick={() => handleAnswer(qIndex, opt.value)}
+                      key={optIndex}
+                      onClick={() => handleAnswer(qIndex, optIndex)}
                       className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-slate-600 border-slate-300 hover:bg-slate-100'}`}
                     >
-                      {opt.label}
+                      {optLabel}
                     </button>
                   );
                 })}

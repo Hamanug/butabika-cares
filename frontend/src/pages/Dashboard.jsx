@@ -47,30 +47,14 @@ export default function Dashboard() {
     return `${formattedHours}:${minutes} ${ampm}`;
   };
 
-  const checkSessionActive = (dateStr, timeStr) => {
-    if (!dateStr || !timeStr) return false;
-    try {
-      const [hours, minutes] = timeStr.split(':');
-      
-      // Parse the date into a local Date instance (handles UTC string conversion accurately)
-      const sessionStart = new Date(dateStr);
-      sessionStart.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
 
-      const now = new Date();
-      const diffMins = (now - sessionStart) / 60000;
-
-      // Session unlocks 5 mins before and remains active for 60 mins after start time
-      return diffMins >= -5 && diffMins <= 60;
-    } catch (e) {
-      return false;
-    }
-  };
 
 
 
   const [isBookingOpen, setIsBookingOpen] = useState(false);
   const [isVideoOpen, setIsVideoOpen] = useState(false);
   const [sessions, setSessions] = useState([]);
+  const [history, setHistory] = useState([]);
   const [activeSession, setActiveSession] = useState(null);
 
   const fetchSessions = async () => {
@@ -82,8 +66,20 @@ export default function Dashboard() {
     }
   };
 
+  const fetchHistory = async () => {
+    try {
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/appointments/patient/history`, { withCredentials: true });
+      setHistory(res.data);
+    } catch (err) {
+      console.error('Failed to fetch history', err);
+    }
+  };
+
   useEffect(() => {
-    if (user) fetchSessions();
+    if (user) {
+      fetchSessions();
+      fetchHistory();
+    }
   }, [user]);
 
   return (
@@ -191,7 +187,7 @@ export default function Dashboard() {
                     </p>
                   </div>
                   {session.status === 'scheduled' && (
-                    checkSessionActive(session.appointment_date, session.appointment_time) ? (
+                    session.is_joinable ? (
                       <button
                         onClick={() => { setActiveSession(session); setIsVideoOpen(true); }}
                         className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -209,6 +205,44 @@ export default function Dashboard() {
                   )}
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* Session History */}
+        {history?.length > 0 && (
+          <div className="mb-12">
+            <h3 className="text-xl font-medium mb-6 text-slate-900">Session History</h3>
+            <div className="grid grid-cols-1 gap-6">
+              {history.map(session => {
+                let durationText = '';
+                if (session.ended_at && session.appointment_date && session.appointment_time) {
+                  try {
+                    const start = new Date(session.appointment_date);
+                    const [h, m] = session.appointment_time.split(':');
+                    start.setHours(parseInt(h, 10), parseInt(m, 10), 0, 0);
+                    const end = new Date(session.ended_at);
+                    const diffMins = Math.round((end - start) / 60000);
+                    if (diffMins > 0) durationText = ` • ${diffMins} minutes`;
+                  } catch (e) {}
+                }
+                return (
+                  <div key={session.id} className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Calendar className="w-4 h-4 text-slate-500" />
+                      <span className="font-medium text-slate-900">
+                        {formatDisplayDate(session.appointment_date)} at {formatTimeDisplay(session.appointment_time)}{durationText}
+                      </span>
+                    </div>
+                    <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+                      <h4 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Session Summary / Notes from your Therapist</h4>
+                      <p className="text-sm text-slate-700 whitespace-pre-wrap">
+                        {session.shared_notes || "No summary provided for this session"}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}

@@ -101,6 +101,12 @@ router.get('/dashboard-stats', authenticate, async (req, res) => {
       AND created_at >= NOW() - INTERVAL '7 days'
     `, [userId]);
 
+    // Count Completed Sessions
+    const completedSessions = await db.query(`
+      SELECT COUNT(*) FROM appointments 
+      WHERE patient_id = $1 AND status = 'completed'
+    `, [userId]);
+
     res.json({
       assessmentsCompleted: parseInt(assessments.rows[0].count),
       moodStatus,
@@ -108,7 +114,8 @@ router.get('/dashboard-stats', authenticate, async (req, res) => {
       stressCount: parseInt(recentStress.rows[0].count),
       cbtCount: parseInt(recentCbt.rows[0].count),
       mindfulnessCycles: parseInt(recentMindfulness.rows[0].total_cycles),
-      weeklyBreathingCycles: parseInt(weeklyBreathing.rows[0].total_cycles)
+      weeklyBreathingCycles: parseInt(weeklyBreathing.rows[0].total_cycles),
+      completedSessions: parseInt(completedSessions.rows[0].count)
     });
   } catch (err) {
     console.error('Failed to fetch stats:', err);

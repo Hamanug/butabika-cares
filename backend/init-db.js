@@ -56,6 +56,7 @@ const initializeDatabase = async () => {
       user_id UUID REFERENCES users(id) ON DELETE CASCADE,
       score INT NOT NULL,
       max_score INT NOT NULL,
+      answers JSONB,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     );
 

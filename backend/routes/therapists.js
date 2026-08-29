@@ -44,12 +44,15 @@ router.get('/active', async (req, res) => {
         COALESCE(p.last_name, 'Therapist') AS last_name, 
         COALESCE(tp.specialization, 'Pending Assignment') as occupation, 
         tp.profile_picture,
-        tp.bio
+        tp.bio,
+        p.gender,
+        COUNT(a.id) AS session_count
       FROM users u
       LEFT JOIN profiles p ON u.id = p.user_id
       LEFT JOIN therapist_profiles tp ON u.id = tp.user_id
+      LEFT JOIN appointments a ON u.id = a.therapist_id
       WHERE u.role = 'therapist'
-      ORDER BY last_name ASC
+      GROUP BY u.id, p.first_name, p.last_name, tp.title, tp.specialization, tp.profile_picture, tp.bio, p.gender
     `);
     res.json(result.rows);
   } catch (err) {
@@ -176,7 +179,7 @@ router.get('/patient/:id', authenticate, async (req, res) => {
 
     // 3. Fetch stress scores
     const stressQuery = await db.query(`
-      SELECT id, score, max_score, created_at
+      SELECT id, score, max_score, answers, created_at
       FROM stress_tracking
       WHERE user_id = $1
       ORDER BY created_at DESC
@@ -190,16 +193,53 @@ router.get('/patient/:id', authenticate, async (req, res) => {
       ORDER BY created_at DESC
     `, [patientId]);
 
+    // 5. Fetch screenings
+    const screeningsQuery = await db.query(`
+      SELECT * 
+      FROM screening_results 
+      WHERE patient_id = $1 
+      ORDER BY created_at DESC
+    `, [patientId]);
+
     res.json({
       ...patientData,
       entries,
       stressScores: stressQuery.rows,
-      thoughtRecords: thoughtRecordsQuery.rows
+      thoughtRecords: thoughtRecordsQuery.rows,
+      screenings: screeningsQuery.rows
     });
 
   } catch (err) {
     console.error('Failed to fetch patient data:', err);
     res.status(500).json({ error: 'Failed to fetch patient data' });
+  }
+});
+
+router.post('/patient/:id/reveal-contact', authenticate, async (req, res) => {
+  if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
+
+  const patientId = req.params.id;
+  
+  try {
+    // Log the event
+    await db.query(`
+      INSERT INTO audit_contact_views (therapist_id, patient_id) 
+      VALUES ($1, $2)
+    `, [req.user.id, patientId]);
+
+    // Fetch the phone number
+    const result = await db.query(`
+      SELECT phone_number FROM users WHERE id = $1
+    `, [patientId]);
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Patient not found' });
+    }
+
+    res.json({ phone_number: result.rows[0].phone_number });
+  } catch (err) {
+    console.error('Failed to reveal contact:', err);
+    res.status(500).json({ error: 'Failed to reveal contact' });
   }
 });
 

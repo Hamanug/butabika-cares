@@ -18,15 +18,15 @@ const authenticate = (req, res, next) => {
 
 router.post('/', authenticate, async (req, res) => {
   try {
-    const { score, maxScore, date } = req.body;
+    const { score, maxScore, date, answers } = req.body;
     
     if (score === undefined || maxScore === undefined) {
       return res.status(400).json({ error: 'Score and maxScore are required' });
     }
 
     const result = await db.query(
-      'INSERT INTO stress_tracking (user_id, score, max_score, created_at) VALUES ($1, $2, $3, $4) RETURNING *',
-      [req.user.id, score, maxScore, date || new Date().toISOString()]
+      'INSERT INTO stress_tracking (user_id, score, max_score, created_at, answers) VALUES ($1, $2, $3, $4, $5) RETURNING *',
+      [req.user.id, score, maxScore, date || new Date().toISOString(), answers ? JSON.stringify(answers) : null]
     );
     res.json({ message: 'Success', data: result.rows[0] });
   } catch (err) {
@@ -38,7 +38,7 @@ router.post('/', authenticate, async (req, res) => {
 router.get('/', authenticate, async (req, res) => {
   try {
     const result = await db.query(
-      'SELECT id, score, max_score, created_at FROM stress_tracking WHERE user_id = $1 ORDER BY created_at DESC',
+      'SELECT id, score, max_score, answers, created_at FROM stress_tracking WHERE user_id = $1 ORDER BY created_at DESC',
       [req.user.id]
     );
     res.json(result.rows);

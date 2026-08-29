@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useSocket } from '../context/SocketContext';
 import { useAuth } from '../context/AuthContext';
 import { Send, User as UserIcon } from 'lucide-react';
+import { useSearchParams, Link } from 'react-router-dom';
 
 export default function Messages() {
   const [activeChat, setActiveChat] = useState(null);
@@ -31,6 +32,23 @@ export default function Messages() {
         fetchContacts();
     }
   }, [user]);
+
+  const [searchParams] = useSearchParams();
+  const targetUserId = searchParams.get('userId');
+  const targetFirstName = searchParams.get('firstName');
+  const targetLastName = searchParams.get('lastName');
+
+  useEffect(() => {
+    if (!isLoading && targetUserId) {
+      const id = parseInt(targetUserId, 10);
+      const existing = contacts.find(c => c.id === id);
+      if (existing) {
+        setActiveChat(existing);
+      } else {
+        setActiveChat({ id, first_name: targetFirstName || 'New', last_name: targetLastName || 'Conversation' });
+      }
+    }
+  }, [isLoading, targetUserId, contacts, targetFirstName, targetLastName]);
 
   useEffect(() => {
     if (!activeChat) return;
@@ -107,7 +125,14 @@ export default function Messages() {
           {isLoading ? (
              <div className="p-4 text-center text-slate-500 text-sm">Loading contacts...</div>
           ) : contacts.length === 0 ? (
-             <div className="p-4 text-center text-slate-500 text-sm">No contacts found</div>
+             <div className="p-8 text-center text-slate-500 text-sm flex flex-col items-center">
+                <p className="mb-4">No active conversations.</p>
+                {user?.role === 'patient' && (
+                  <Link to="/therapists" className="text-blue-600 hover:text-blue-700 font-medium bg-blue-50 px-4 py-2 rounded-lg transition-colors">
+                    Find a Therapist to start a chat
+                  </Link>
+                )}
+             </div>
           ) : (
             contacts.map(contact => {
                 const isOnline = onlineUsers.includes(contact.id);

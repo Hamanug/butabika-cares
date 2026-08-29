@@ -22,10 +22,10 @@ router.post('/book', authenticate, async (req, res) => {
   try {
     const { appointment_date, appointment_time, therapist_id, notes } = req.body;
     
-    // 1. Time Boundary Validation (8 AM to 8 PM)
+    // 1. Time Boundary Validation (8 AM to 4 PM, 1-hour slots)
     const [hours, minutes] = appointment_time.split(':').map(Number);
-    if (hours < 8 || hours >= 20) {
-      return res.status(400).json({ error: 'Appointments must be scheduled between 8:00 AM and 8:00 PM East Africa Time.' });
+    if (hours < 8 || hours > 16) {
+      return res.status(400).json({ error: 'Appointments must be scheduled between 8:00 AM and 4:00 PM East Africa Time.' });
     }
 
     // 2. Auto-Expire "Stuck" Sessions
@@ -47,11 +47,24 @@ router.post('/book', authenticate, async (req, res) => {
       return res.status(400).json({ error: 'You already have an active session request. Please wait for it to conclude before booking another.' });
     }
 
-    // 4. Create New Session
+    // 4. Therapist Double-Booking Check
+    if (therapist_id) {
+      const conflict = await db.query(
+        `SELECT id FROM appointments 
+         WHERE therapist_id = $1 AND appointment_date = $2 AND appointment_time = $3 
+         AND status IN ('pending', 'scheduled', 'accepted')`,
+        [therapist_id, appointment_date, appointment_time]
+      );
+      if (conflict.rows.length > 0) {
+        return res.status(409).json({ error: 'This therapist is already booked at that time. Please choose a different slot.' });
+      }
+    }
+
+    // 5. Create New Session
     const result = await db.query(
-      `INSERT INTO appointments (patient_id, therapist_id, appointment_date, appointment_time, status, notes)
-       VALUES ($1, $2, $3, $4, 'pending', $5) RETURNING *`,
-      [req.user.id, therapist_id || null, appointment_date, appointment_time, notes]
+      `INSERT INTO appointments (patient_id, therapist_id, appointment_date, appointment_time, status)
+       VALUES ($1, $2, $3, $4, 'pending') RETURNING *`,
+      [req.user.id, therapist_id || null, appointment_date, appointment_time]
     );
     
     res.json({ message: 'Appointment requested successfully', appointment: result.rows[0] });
@@ -68,7 +81,8 @@ router.post('/book', authenticate, async (req, res) => {
 router.get('/pending', authenticate, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT a.*, p.first_name as other_first, p.last_name as other_last, u.phone_number, u.display_id as other_display_id
+      SELECT a.*, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id,
+      ((NOW() AT TIME ZONE 'Africa/Nairobi') BETWEEN (a.appointment_date + a.appointment_time::time - INTERVAL '15 minutes') AND (a.appointment_date + a.appointment_time::time + INTERVAL '20 minutes')) AS is_joinable
       FROM appointments a 
       JOIN users u ON a.patient_id = u.id 
       LEFT JOIN profiles p ON u.id = p.user_id
@@ -155,13 +169,15 @@ router.get('/my-sessions', authenticate, async (req, res) => {
     
     // Convert UTC Date string properly in DB query or just select it as is
     const query = isTherapist
-      ? `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.phone_number as other_phone, u.display_id as other_display_id 
+      ? `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id,
+         ((NOW() AT TIME ZONE 'Africa/Nairobi') BETWEEN (a.appointment_date + a.appointment_time::time - INTERVAL '15 minutes') AND (a.appointment_date + a.appointment_time::time + INTERVAL '20 minutes')) AS is_joinable
          FROM appointments a 
          JOIN users u ON a.patient_id = u.id 
          LEFT JOIN profiles p ON u.id = p.user_id
          WHERE a.therapist_id = $1 AND a.status IN ('scheduled', 'pending', 'completed')
          ORDER BY a.appointment_date ASC`
-      : `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id 
+      : `SELECT a.*, ROUND(EXTRACT(EPOCH FROM (a.ended_at - a.started_at)) / 60) AS duration_minutes, p.first_name as other_first, p.last_name as other_last, u.display_id as other_display_id,
+         ((NOW() AT TIME ZONE 'Africa/Nairobi') BETWEEN (a.appointment_date + a.appointment_time::time - INTERVAL '15 minutes') AND (a.appointment_date + a.appointment_time::time + INTERVAL '20 minutes')) AS is_joinable
          FROM appointments a 
          LEFT JOIN users u ON a.therapist_id = u.id 
          LEFT JOIN profiles p ON u.id = p.user_id
@@ -189,16 +205,17 @@ router.patch('/:id/ping', authenticate, async (req, res) => {
 // Complete Session & Save Clinical Notes
 router.put('/:id/complete', authenticate, async (req, res) => {
   try {
-    const { notes } = req.body;
+    const { private_notes, shared_notes } = req.body;
     
     const result = await db.query(`
       UPDATE appointments 
       SET status = 'completed', 
-          notes = $1,
+          private_notes = $1,
+          shared_notes = $2,
           ended_at = NOW()
-      WHERE id = $2 
+      WHERE id = $3 
       RETURNING *
-    `, [notes, req.params.id]);
+    `, [private_notes, shared_notes, req.params.id]);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ error: 'Session not found' });
@@ -215,10 +232,13 @@ router.put('/:id/complete', authenticate, async (req, res) => {
 router.put('/:id/notes', authenticate, async (req, res) => {
   if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
   try {
-    const { notes } = req.body;
+    const { private_notes, shared_notes } = req.body;
     const apptId = req.params.id;
     
-    await db.query('UPDATE appointments SET notes = $1 WHERE id = $2 AND therapist_id = $3', [notes, apptId, req.user.id]);
+    await db.query(
+      'UPDATE appointments SET private_notes = $1, shared_notes = $2 WHERE id = $3 AND therapist_id = $4',
+      [private_notes, shared_notes, apptId, req.user.id]
+    );
     res.json({ message: 'Notes updated successfully.' });
   } catch (err) { 
     console.error('DB Error:', err);
@@ -226,44 +246,21 @@ router.put('/:id/notes', authenticate, async (req, res) => {
   }
 });
 
-// Therapist: Save Clinical Notes (Private & Shared)
-router.post('/:id/notes', authenticate, async (req, res) => {
-  if (req.user.role !== 'therapist') return res.status(403).json({ error: 'Unauthorized' });
-  try {
-    const { private_notes, shared_notes } = req.body;
-    const apptId = req.params.id;
-    
-    // Ensure the therapist owns this appointment
-    const checkRes = await db.query('SELECT id FROM appointments WHERE id = $1 AND therapist_id = $2', [apptId, req.user.id]);
-    if (checkRes.rows.length === 0) return res.status(403).json({ error: 'Unauthorized or appointment not found' });
-
-    await db.query(
-      'UPDATE appointments SET private_notes = $1, shared_notes = $2 WHERE id = $3',
-      [private_notes, shared_notes, apptId]
-    );
-    res.json({ message: 'Clinical notes saved successfully.' });
-  } catch (err) {
-    console.error('DB Error:', err);
-    res.status(500).json({ error: 'Failed to save notes' });
-  }
-});
-
-// Patient: Get My Shared Notes
-router.get('/patient/my-notes', authenticate, async (req, res) => {
+// Patient: Get Session History (Completed Sessions)
+router.get('/patient/history', authenticate, async (req, res) => {
   if (req.user.role !== 'patient') return res.status(403).json({ error: 'Unauthorized' });
   try {
-    // Explicitly stripping out private_notes in SQL by only selecting shared_notes
     const result = await db.query(`
-      SELECT id, appointment_date, appointment_time, therapist_id, shared_notes 
+      SELECT id, appointment_date, appointment_time, ended_at, shared_notes 
       FROM appointments 
-      WHERE patient_id = $1 AND shared_notes IS NOT NULL
-      ORDER BY appointment_date DESC
+      WHERE patient_id = $1 AND status = 'completed' 
+      ORDER BY appointment_date DESC, appointment_time DESC
     `, [req.user.id]);
     
     res.json(result.rows);
   } catch (err) {
     console.error('DB Error:', err);
-    res.status(500).json({ error: 'Failed to fetch notes' });
+    res.status(500).json({ error: 'Failed to fetch session history' });
   }
 });
 
@@ -302,6 +299,56 @@ router.patch('/:id/join', authenticate, async (req, res) => {
   } catch (err) {
     console.error("Presence Tracking Error:", err);
     res.status(500).json({ error: 'Failed to log presence' });
+  }
+});
+
+// Get booked times for a therapist on a given date
+router.get('/booked-times', authenticate, async (req, res) => {
+  try {
+    const { therapist_id, date } = req.query;
+    if (!therapist_id || !date) {
+      return res.status(400).json({ error: 'therapist_id and date are required.' });
+    }
+
+    const result = await db.query(
+      `SELECT appointment_time FROM appointments 
+       WHERE therapist_id = $1 AND appointment_date = $2 
+       AND status IN ('pending', 'scheduled', 'accepted')`,
+      [therapist_id, date]
+    );
+
+    const times = result.rows.map(r => r.appointment_time);
+    res.json(times);
+  } catch (err) {
+    console.error('Booked times error:', err);
+    res.status(500).json({ error: 'Failed to fetch booked times' });
+  }
+});
+
+// User-initiated cancellation
+router.put('/:id/cancel', authenticate, async (req, res) => {
+  try {
+    const appointmentId = req.params.id;
+
+    // Verify the user is either the patient or the therapist for this appointment
+    const appt = await db.query(
+      `SELECT id FROM appointments WHERE id = $1 AND (patient_id = $2 OR therapist_id = $2)`,
+      [appointmentId, req.user.id]
+    );
+
+    if (appt.rows.length === 0) {
+      return res.status(403).json({ error: 'Unauthorized or appointment not found.' });
+    }
+
+    await db.query(
+      `UPDATE appointments SET status = 'cancelled' WHERE id = $1`,
+      [appointmentId]
+    );
+
+    res.json({ message: 'Appointment cancelled successfully.' });
+  } catch (err) {
+    console.error('Cancel error:', err);
+    res.status(500).json({ error: 'Failed to cancel appointment' });
   }
 });
 

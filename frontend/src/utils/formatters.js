@@ -30,3 +30,12 @@ export const getPatientAvatar = (user) => {
   }
   return 'P';
 };
+
+export const formatUgandanNumber = (num) => {
+  if (!num) return '';
+  // If it starts with 256 and is 12 digits long, replace 256 with 0
+  if (num.startsWith('256') && num.length === 12) {
+    return '0' + num.slice(3);
+  }
+  return num;
+};

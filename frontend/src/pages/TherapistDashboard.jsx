@@ -24,8 +24,7 @@ export default function TherapistDashboard() {
   const [activeSession, setActiveSession] = useState(null);
   const [isProcessing, setIsProcessing] = useState(null); // Tracks ID of request being accepted/cancelled
   
-  // Timer State to force UI re-renders for the "Start Session" time-gate
-  const [currentTime, setCurrentTime] = useState(new Date());
+  // Timer State removed in favor of backend is_joinable flag
 
   // Fetch Data
   const fetchData = async () => {
@@ -47,28 +46,10 @@ export default function TherapistDashboard() {
   useEffect(() => {
     if (user) fetchData();
     
-    // Update current time every minute to evaluate session joinability
-    const timer = setInterval(() => setCurrentTime(new Date()), 60000);
-    return () => clearInterval(timer);
+    // Timer removed in favor of backend is_joinable flag
   }, [user]);
 
-  // Time-Gate Logic: 5 minutes before, up to 60 minutes after
-  const checkSessionActive = (dateStr, timeStr) => {
-    if (!dateStr || !timeStr) return false;
-    try {
-      const [time, modifier] = timeStr.split(' ');
-      let [hours, minutes] = time.split(':');
-      if (hours === '12') hours = '00';
-      if (modifier === 'PM') hours = parseInt(hours, 10) + 12;
-      
-      const sessionStart = new Date(`${dateStr.split('T')[0]}T${hours.toString().padStart(2, '0')}:${minutes}:00`);
-      const diffMins = (currentTime - sessionStart) / 1000 / 60;
-      
-      return diffMins >= -5 && diffMins <= 60;
-    } catch (e) { 
-      return false; 
-    }
-  };
+
 
   // Actions
   const handleAcceptRequest = async (id) => {
@@ -262,14 +243,25 @@ export default function TherapistDashboard() {
                               <FileText className="h-4 w-4 mr-2" />
                               View Clinical Profile
                             </button>
-                            <button 
-                              onClick={(e) => { e.stopPropagation(); handleStartSession(session); }}
-                              className="flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white shadow-sm"
-                              title="Start Session"
-                            >
-                              <Video className="h-4 w-4 mr-2" />
-                              Start Session
-                            </button>
+                            {session.is_joinable ? (
+                              <button 
+                                onClick={(e) => { e.stopPropagation(); handleStartSession(session); }}
+                                className="flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors bg-green-500 hover:bg-green-600 text-white shadow-sm"
+                                title="Start Session"
+                              >
+                                <Video className="h-4 w-4 mr-2" />
+                                Start Session
+                              </button>
+                            ) : (
+                              <button 
+                                disabled
+                                className="flex items-center px-4 py-2 rounded-md text-sm font-medium transition-colors bg-slate-200 text-slate-500 cursor-not-allowed shadow-sm"
+                                title="Locked until 15m before session"
+                              >
+                                <Video className="h-4 w-4 mr-2" />
+                                Locked
+                              </button>
+                            )}
                             <button 
                               onClick={(e) => { e.stopPropagation(); handleCancelSession(session.id); }}
                               disabled={isProcessing === session.id}

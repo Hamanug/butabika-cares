@@ -2,12 +2,26 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { X, Clock, CheckCircle2, Loader2, PhoneOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import { formatUgandanNumber } from '../utils/formatters';
 
 export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapist, onSessionEnded }) {
   const [seconds, setSeconds] = useState(0);
-  const [notes, setNotes] = useState('');
+  const [privateNotes, setPrivateNotes] = useState('');
+  const [sharedNotes, setSharedNotes] = useState('');
   const [ending, setEnding] = useState(false);
   const [isTheaterMode, setIsTheaterMode] = useState(false);
+  const [revealedContact, setRevealedContact] = useState(null);
+
+  const handleRevealContact = async () => {
+    if (!appointment?.patient_id) return;
+    try {
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/therapists/patient/${appointment.patient_id}/reveal-contact`, {}, { withCredentials: true });
+      setRevealedContact(res.data.phone_number);
+      toast.success('Emergency contact revealed');
+    } catch (err) {
+      toast.error('Failed to reveal contact');
+    }
+  };
 
   // Notify backend that this user has joined the room
   useEffect(() => {
@@ -31,20 +45,21 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
 
   useEffect(() => {
     if (isOpen && appointment && isTherapist) {
-      setNotes(appointment.notes || '');
+      setPrivateNotes(appointment.private_notes || '');
+      setSharedNotes(appointment.shared_notes || '');
     }
   }, [isOpen, appointment, isTherapist]);
 
   useEffect(() => {
     if (isOpen && appointment && isTherapist) {
       const timer = setTimeout(() => {
-        if (notes !== (appointment.notes || '')) {
-          axios.put(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/notes`, { notes }, { withCredentials: true }).catch(err => console.error('Failed to auto-save notes'));
+        if (privateNotes !== (appointment.private_notes || '') || sharedNotes !== (appointment.shared_notes || '')) {
+          axios.put(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/notes`, { private_notes: privateNotes, shared_notes: sharedNotes }, { withCredentials: true }).catch(err => console.error('Failed to auto-save notes'));
         }
       }, 2000);
       return () => clearTimeout(timer);
     }
-  }, [notes, isOpen, appointment, isTherapist]);
+  }, [privateNotes, sharedNotes, isOpen, appointment, isTherapist]);
 
   useEffect(() => {
     let interval;
@@ -67,7 +82,7 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
   const handleComplete = async () => {
     setEnding(true);
     try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/complete`, { notes }, { withCredentials: true });
+      await axios.put(`${import.meta.env.VITE_API_URL}/api/appointments/${appointment.id}/complete`, { private_notes: privateNotes, shared_notes: sharedNotes }, { withCredentials: true });
       if (onSessionEnded) onSessionEnded();
       onClose();
     } catch (err) {
@@ -125,22 +140,49 @@ export default function VideoRoomModal({ appointment, isOpen, onClose, isTherapi
 
         {/* Therapist Controls & Notes Drawer */}
         {isTherapist ? (
-          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row gap-4 items-center">
-            <textarea
-              rows="2"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Add private clinical session notes here..."
-              className="flex-1 bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-warm-500"
-            />
-            <button
-              onClick={handleComplete}
-              disabled={ending}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
-            >
-              {ending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Complete & Save Notes
-            </button>
+          <div className="bg-slate-800/80 p-4 rounded-xl border border-slate-700 flex flex-col md:flex-row gap-4 items-stretch">
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="flex items-center justify-between px-1">
+                <label className="text-xs text-slate-400 font-medium">Private Notes (Therapist Only)</label>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Emergency:</span>
+                  {revealedContact ? (
+                    <a href={`tel:+${revealedContact}`} className="text-blue-400 hover:text-blue-300 text-xs font-mono">{formatUgandanNumber(revealedContact)}</a>
+                  ) : (
+                    <button onClick={handleRevealContact} className="text-[10px] text-slate-400 hover:text-white bg-slate-700 hover:bg-slate-600 px-2 py-0.5 rounded transition-colors uppercase tracking-wide font-bold flex items-center gap-1">
+                      📞 Reveal
+                    </button>
+                  )}
+                </div>
+              </div>
+              <textarea
+                rows="2"
+                value={privateNotes}
+                onChange={e => setPrivateNotes(e.target.value)}
+                placeholder="Add private clinical session notes here..."
+                className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-warm-500"
+              />
+            </div>
+            <div className="flex-1 flex flex-col gap-2">
+              <label className="text-xs text-slate-400 font-medium px-1">Shared Notes (Visible to Patient)</label>
+              <textarea
+                rows="2"
+                value={sharedNotes}
+                onChange={e => setSharedNotes(e.target.value)}
+                placeholder="Add notes that the patient can review later..."
+                className="w-full bg-slate-900 text-white border border-slate-700 rounded-lg p-2.5 text-sm outline-none focus:border-warm-500"
+              />
+            </div>
+            <div className="flex flex-col justify-end pb-[2px]">
+              <button
+                onClick={handleComplete}
+                disabled={ending}
+                className="h-[68px] bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-2.5 rounded-lg text-sm font-medium transition-colors flex flex-col items-center justify-center gap-1"
+              >
+                {ending ? <Loader2 className="w-5 h-5 animate-spin" /> : <CheckCircle2 className="w-5 h-5" />}
+                <span>Complete</span>
+              </button>
+            </div>
           </div>
         ) : (
           <div className="text-center text-slate-400 text-xs py-1">
