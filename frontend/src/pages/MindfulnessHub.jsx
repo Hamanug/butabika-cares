@@ -1,71 +1,87 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Wind, Eye, Activity } from 'lucide-react';
+import { Wind, Eye, Activity, ChevronRight, Stethoscope } from 'lucide-react';
 
 export default function MindfulnessHub() {
   const navigate = useNavigate();
 
-  const cards = [
+  const modules = [
     {
       title: "Guided Breathing",
-      description: "Follow a visual pacing guide to regulate your nervous system.",
+      tag: "Autonomic Regulation",
+      description: "Follow a visual pacing guide to regulate your central nervous system.",
       icon: Wind,
-      route: "/breathing", // Navigates to the existing route (we will map it to Exercises)
-      colorTheme: "bg-teal-50 text-teal-900 border-teal-200 hover:bg-teal-100 hover:border-teal-300",
-      iconTheme: "bg-teal-200 text-teal-700",
-      linkText: "text-teal-700"
+      route: "/breathing",
+      cta: "Initiate Module"
     },
     {
       title: "5-4-3-2-1 Grounding",
-      description: "A sensory checklist to quickly anchor yourself during moments of high anxiety.",
+      tag: "Sensory Grounding",
+      description: "A structured sensory checklist to anchor cognition during acute distress.",
       icon: Eye,
       route: "/grounding",
-      colorTheme: "bg-amber-50 text-amber-900 border-amber-200 hover:bg-amber-100 hover:border-amber-300",
-      iconTheme: "bg-amber-200 text-amber-700",
-      linkText: "text-amber-700"
+      cta: "Access Tool"
     },
     {
       title: "Body Scan (PMR)",
-      description: "Systematically release physical tension stored in your muscle groups.",
+      tag: "Somatic Regulation",
+      description: "Systematically identify and release physical tension stored in primary muscle groups.",
       icon: Activity,
       route: "/body-scan",
-      colorTheme: "bg-indigo-50 text-indigo-900 border-indigo-200 hover:bg-indigo-100 hover:border-indigo-300",
-      iconTheme: "bg-indigo-200 text-indigo-700",
-      linkText: "text-indigo-700"
+      cta: "Initiate Module"
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-28 pb-20">
+    <div className="min-h-screen bg-slate-50 pt-28 pb-20 font-sans">
       <div className="max-w-5xl mx-auto px-4">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">Mindfulness Hub</h1>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Explore grounding exercises, breathing techniques, and meditation tools to help anchor you in the present moment.
-          </p>
+        
+        <div className="mb-10 flex flex-col md:flex-row md:items-end justify-between border-b border-slate-200 pb-6">
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 bg-white rounded-2xl shadow-sm border border-slate-200 flex items-center justify-center shrink-0">
+              <Stethoscope className="w-7 h-7 text-[#0F766E]" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-1">Clinical Tool Library</h1>
+              <p className="text-slate-500 font-medium">Prescribed therapeutic modules and cognitive interventions.</p>
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cards.map((card, idx) => {
-            const Icon = card.icon;
+          {modules.map((mod, idx) => {
+            const Icon = mod.icon;
             return (
               <div 
                 key={idx}
-                onClick={() => navigate(card.route)}
-                className={`rounded-2xl p-6 shadow-sm border cursor-pointer transition-all duration-300 transform hover:-translate-y-1 ${card.colorTheme}`}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 flex flex-col h-full hover:shadow-md transition-shadow"
               >
-                <div className={`h-12 w-12 rounded-full flex items-center justify-center mb-4 transition-colors ${card.iconTheme}`}>
-                  <Icon className="w-6 h-6" />
+                <div className="mb-6 flex justify-between items-start">
+                  <div className="h-12 w-12 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center shrink-0">
+                    <Icon className="w-6 h-6 text-[#0F766E]" />
+                  </div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-slate-500 bg-slate-50 px-2.5 py-1 rounded-md border border-slate-200 text-right">
+                    {mod.tag}
+                  </span>
                 </div>
-                <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
-                <p className="opacity-80 mb-6 text-sm leading-relaxed">{card.description}</p>
-                <div className={`font-medium flex items-center ${card.linkText}`}>
-                  Start Practice &rarr;
-                </div>
+                
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{mod.title}</h3>
+                <p className="text-slate-600 mb-8 text-sm leading-relaxed font-medium flex-grow">
+                  {mod.description}
+                </p>
+                
+                <button 
+                  onClick={() => navigate(mod.route)}
+                  className="w-full flex justify-between items-center px-5 py-3 rounded-full border border-slate-300 text-[#0F766E] font-bold text-sm hover:border-[#0F766E] hover:bg-teal-50 transition-all shadow-sm group"
+                >
+                  {mod.cta}
+                  <ChevronRight className="w-4 h-4 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
+                </button>
               </div>
             );
           })}
         </div>
+
       </div>
     </div>
   );

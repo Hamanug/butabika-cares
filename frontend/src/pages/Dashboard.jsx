@@ -83,7 +83,7 @@ export default function Dashboard() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-serene-50 to-white pt-32 pb-20">
+    <div className="min-h-screen bg-slate-50 pt-32 pb-20">
       <div className="container max-w-5xl mx-auto px-4">
 
         {/* Header & Main CTA */}
@@ -102,71 +102,69 @@ export default function Dashboard() {
         <div className="mb-12">
           <h3 className="text-xl font-medium mb-6 text-slate-900">Your Wellness Journey</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
-
             {/* 1. Assessments */}
-            <Link to="/screenings" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-sage-300"></div>
+            <Link to="/screenings" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 group-hover:bg-[#0F766E] transition-colors"></div>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-slate-700">Assessments</h4>
-                <ClipboardList className="h-5 w-5 text-sage-500" />
+                <h4 className="text-sm font-bold text-slate-700">Assessments</h4>
+                <ClipboardList className="h-5 w-5 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
               </div>
-              <p className="text-3xl font-semibold text-slate-900">{dashboardStats.assessmentsCompleted}/6</p>
-              <p className="text-sm text-slate-500 mt-1">Completed • 0 total assessments</p>
+              <p className="text-3xl font-black text-slate-900">{dashboardStats.assessmentsCompleted}<span className="text-lg text-slate-400 font-medium">/6</span></p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Completed</p>
             </Link>
 
             {/* 2. Therapeutic Journal */}
-            <Link to="/journal" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-serene-300"></div>
+            <Link to="/journal" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 group-hover:bg-[#0F766E] transition-colors"></div>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-sm font-medium text-slate-700">Therapeutic Journal</h4>
-                <PenLine className="h-5 w-5 text-serene-500" />
+                <h4 className="text-sm font-bold text-slate-700">Journal NLP</h4>
+                <PenLine className="h-5 w-5 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
               </div>
               {dashboardStats.moodStatus === 'No recent data' ? (
                 <>
-                  <p className="text-lg font-semibold text-slate-900 leading-snug">Ready to Check In?</p>
-                  <p className="text-sm text-slate-500 mt-1 whitespace-normal">No entries in the last 7 days. Tap here to log your mood.</p>
+                  <p className="text-lg font-bold text-slate-900 leading-snug">Requires Data</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Log entry to update</p>
                 </>
               ) : (
                 <>
-                  <p className="text-lg font-semibold text-slate-900 leading-snug" title={dashboardStats.moodStatus}>{dashboardStats.moodStatus}</p>
-                  <p className="text-sm text-slate-500 mt-1 whitespace-normal">Based on NLP & last 7 days</p>
+                  <p className="text-lg font-bold text-[#0F766E] leading-snug truncate" title={dashboardStats.moodStatus}>{dashboardStats.moodStatus}</p>
+                  <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">7-Day Analysis</p>
                 </>
               )}
             </Link>
 
             {/* 3. Breathing Exercises */}
-            <Link to="/exercises" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-indigo-300"></div>
+            <Link to="/exercises" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 group-hover:bg-[#0F766E] transition-colors"></div>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-sm font-medium text-slate-500">Breathing Exercises</span>
-                <Activity className="h-5 w-5 text-indigo-500" />
+                <h4 className="text-sm font-bold text-slate-700">Breathing Cycles</h4>
+                <Activity className="h-5 w-5 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
               </div>
-              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.weeklyBreathingCycles || 0}</h4>
-              <p className="text-sm text-slate-500">Cycles logged this week</p>
+              <h4 className="text-3xl font-black text-slate-900 mb-1">{stats.weeklyBreathingCycles || 0}</h4>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Weekly Log</p>
             </Link>
 
             {/* 4. Stress Tracking */}
-            <Link to="/stress-management" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-sage-300"></div>
+            <Link to="/stress-management" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 group-hover:bg-[#0F766E] transition-colors"></div>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-sm font-medium text-slate-500">Stress Tracking</span>
-                <Activity className="h-5 w-5 text-emerald-500" />
+                <h4 className="text-sm font-bold text-slate-700">Stress Tracking</h4>
+                <Activity className="h-5 w-5 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
               </div>
-              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.stressCount || 0}</h4>
-              <p className="text-sm text-slate-500">Records logged this week</p>
+              <h4 className="text-3xl font-black text-slate-900 mb-1">{stats.stressCount || 0}</h4>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Records Logged</p>
             </Link>
 
             {/* 5. CBT Thought Record */}
-            <Link to="/cognitive-reframing" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm relative overflow-hidden">
-              <div className="absolute top-0 left-0 w-full h-1 bg-purple-300"></div>
+            <Link to="/cognitive-reframing" className="block cursor-pointer hover:shadow-md transition-all hover:-translate-y-0.5 bg-white rounded-xl p-5 border border-slate-200 shadow-sm relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1 bg-slate-200 group-hover:bg-[#0F766E] transition-colors"></div>
               <div className="flex justify-between items-start mb-4">
-                <span className="text-sm font-medium text-slate-500">CBT Thought Record</span>
-                <Brain className="h-5 w-5 text-purple-500" />
+                <h4 className="text-sm font-bold text-slate-700">CBT Records</h4>
+                <Brain className="h-5 w-5 text-slate-400 group-hover:text-[#0F766E] transition-colors" />
               </div>
-              <h4 className="text-2xl font-bold text-slate-900 mb-1">{stats.cbtCount || 0}</h4>
-              <p className="text-sm text-slate-500">Records logged this week</p>
+              <h4 className="text-3xl font-black text-slate-900 mb-1">{stats.cbtCount || 0}</h4>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-2">Active Logs</p>
             </Link>
-
           </div>
         </div>
 
@@ -179,7 +177,7 @@ export default function Dashboard() {
                 <div key={session.id} className="bg-white/80 backdrop-blur-sm rounded-xl p-5 border border-white/60 shadow-sm flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2 mb-1">
-                      <Calendar className="w-4 h-4 text-[#e07a5f]" />
+                      <Calendar className="w-4 h-4 text-[#0F766E]" />
                       <span className="font-medium text-slate-900">{formatDisplayDate(session.appointment_date)} at {formatTimeDisplay(session.appointment_time)}</span>
                     </div>
                     <p className="text-sm text-slate-500">
@@ -190,7 +188,7 @@ export default function Dashboard() {
                     session.is_joinable ? (
                       <button
                         onClick={() => { setActiveSession(session); setIsVideoOpen(true); }}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                        className="bg-[#0F766E] hover:bg-[#115E59] text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors shadow-sm"
                       >
                         Join Video Call
                       </button>
@@ -251,7 +249,7 @@ export default function Dashboard() {
         <div>
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-xl font-medium text-slate-900">Continue your journey</h3>
-            <button onClick={() => navigate('/therapists')} className="flex items-center gap-2 bg-[#e87a5d] hover:bg-[#d6694c] text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
+            <button onClick={() => navigate('/therapists')} className="flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors shadow-sm">
               <PhoneCall className="h-4 w-4" /> Speak to a Therapist
             </button>
           </div>
@@ -260,8 +258,8 @@ export default function Dashboard() {
 
             {/* Breathing Exercises */}
             <Link to="/exercises" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-indigo-50 flex items-center justify-center mb-4 group-hover:bg-indigo-100 transition-colors">
-                <Activity className="h-6 w-6 text-indigo-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <Activity className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Breathing Exercises</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Practice guided breathing techniques to reduce anxiety and promote relaxation.</p>
@@ -272,8 +270,8 @@ export default function Dashboard() {
 
             {/* Mood Tracker */}
             <Link to="/journal" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-serene-50 flex items-center justify-center mb-4 group-hover:bg-serene-100 transition-colors">
-                <Heart className="h-6 w-6 text-serene-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <Heart className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Mood Tracker</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Record your daily moods and identify patterns to gain mental health insights.</p>
@@ -284,8 +282,8 @@ export default function Dashboard() {
 
             {/* Mental Health Screening */}
             <Link to="/screenings" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-sage-50 flex items-center justify-center mb-4 group-hover:bg-sage-100 transition-colors">
-                <ClipboardList className="h-6 w-6 text-sage-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <ClipboardList className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Health Screening</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Evidence-based screening tools to better understand your wellbeing.</p>
@@ -296,8 +294,8 @@ export default function Dashboard() {
 
             {/* Journal */}
             <Link to="/journal" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-emerald-50 flex items-center justify-center mb-4 group-hover:bg-emerald-100 transition-colors">
-                <PenLine className="h-6 w-6 text-emerald-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <PenLine className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Journal</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Express your thoughts and feelings securely through guided journaling prompts.</p>
@@ -308,8 +306,8 @@ export default function Dashboard() {
 
             {/* Resources */}
             <Link to="/resources" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-warm-50 flex items-center justify-center mb-4 group-hover:bg-warm-100 transition-colors">
-                <BookOpen className="h-6 w-6 text-warm-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <BookOpen className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Resources</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Access our collection of mental health resources, articles, and helpful techniques.</p>
@@ -320,8 +318,8 @@ export default function Dashboard() {
 
             {/* Mind Exercises */}
             <Link to="/mindfulness" className="group block bg-white/70 backdrop-blur-md border border-white/50 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all">
-              <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center mb-4 group-hover:bg-purple-100 transition-colors">
-                <Brain className="h-6 w-6 text-purple-600" />
+              <div className="h-12 w-12 rounded-full bg-slate-100 flex items-center justify-center mb-4 group-hover:bg-teal-50 transition-colors">
+                <Brain className="h-6 w-6 text-[#0F766E]" />
               </div>
               <h4 className="text-lg font-medium text-slate-900 mb-2">Mind Exercises</h4>
               <p className="text-sm text-slate-600 mb-4 line-clamp-2">Guided meditation and mindfulness practices to help center your thoughts.</p>

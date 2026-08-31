@@ -145,7 +145,7 @@ export default function Therapists() {
                 onClick={() => setGenderPreference(option)}
                 className={`px-4 py-2 rounded-full text-sm font-medium transition-colors border ${
                   genderPreference === option 
-                    ? 'bg-orange-500 text-white border-orange-500 shadow-sm' 
+                    ? 'bg-[#0F766E] text-white border-[#0F766E] shadow-sm' 
                     : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
                 }`}
               >
@@ -175,7 +175,7 @@ export default function Therapists() {
                     {therapist.profile_picture ? (
                       <img src={`${import.meta.env.VITE_API_URL}${therapist.profile_picture}`} alt="Profile" className="h-16 w-16 rounded-full object-cover border border-slate-200" />
                     ) : (
-                      <div className="h-16 w-16 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold text-xl border border-orange-200">
+                      <div className="h-16 w-16 rounded-full bg-teal-50 flex items-center justify-center text-[#0F766E] font-bold text-xl border border-teal-100">
                         {getInitials(therapist.first_name || 'N', therapist.last_name || 'T')}
                       </div>
                     )}
@@ -213,7 +213,7 @@ export default function Therapists() {
                             navigate('/auth');
                           }
                         }}
-                        className="flex items-center justify-center gap-2 bg-[#e87a5d] hover:bg-[#d6694c] text-white px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
+                        className="flex items-center justify-center gap-2 bg-[#0F766E] hover:bg-[#115E59] text-white px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
                       >
                         <PhoneCall className="h-4 w-4"/> Request Session
                       </button>
@@ -226,7 +226,7 @@ export default function Therapists() {
                             navigate('/auth');
                           }
                         }}
-                        className="flex items-center justify-center gap-2 bg-white text-[#e87a5d] border border-[#e87a5d] hover:bg-orange-50 px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
+                        className="flex items-center justify-center gap-2 bg-white text-[#0F766E] border border-[#0F766E] hover:bg-teal-50 px-5 py-2.5 rounded-md font-medium transition-colors shadow-sm w-max"
                       >
                         <MessageCircle className="h-4 w-4"/> Send Message
                       </button>
@@ -286,8 +286,8 @@ export default function Therapists() {
                             isBooked 
                               ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed line-through' 
                               : sessionTime === time 
-                                ? 'bg-orange-500 text-white border-orange-500' 
-                                : 'bg-white text-slate-700 border-slate-300 hover:border-orange-500'
+                                ? 'bg-[#0F766E] text-white border-[#0F766E]' 
+                                : 'bg-white text-slate-700 border-slate-300 hover:border-[#0F766E]'
                           }`}
                         >
                           {time}
@@ -307,7 +307,7 @@ export default function Therapists() {
                 value={bookingNote}
                 onChange={(e) => setBookingNote(e.target.value)}
                 rows={4}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-orange-500 text-sm"
+                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] text-sm"
                 placeholder="Briefly describe what you're seeking help with..."
               />
             </div>
@@ -325,7 +325,7 @@ export default function Therapists() {
               </button>
               <button
                 onClick={handleRequestSession}
-                className="px-4 py-2 bg-[#e87a5d] hover:bg-[#d6694c] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+                className="px-4 py-2 bg-[#0F766E] hover:bg-[#115E59] text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
               >
                 Confirm Request
               </button>

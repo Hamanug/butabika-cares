@@ -22,7 +22,7 @@ import Resources from './pages/Resources';
 import Therapists from './pages/Therapists';
 import Dashboard from './pages/Dashboard';
 import Screenings from './pages/Screenings';
-import Exercises from './pages/Exercises';
+import GuidedBreathing from './pages/GuidedBreathing';
 import Journal from './pages/Journal';
 import PatientProfile from './pages/PatientProfile';
 import TherapistProfile from './pages/TherapistProfile';
@@ -90,8 +90,7 @@ const App = () => {
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/screenings" element={<ProtectedRoute><Screenings /></ProtectedRoute>} />
-              <Route path="/exercises" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
-              <Route path="/breathing" element={<ProtectedRoute><Exercises /></ProtectedRoute>} />
+              <Route path="/breathing" element={<ProtectedRoute><GuidedBreathing /></ProtectedRoute>} />
               <Route path="/cognitive-reframing" element={<ProtectedRoute><CognitiveReframing /></ProtectedRoute>} />
               <Route path="/sleep-hygiene" element={<ProtectedRoute><SleepHygiene /></ProtectedRoute>} />
               <Route path="/stress-management" element={<ProtectedRoute><StressManagement /></ProtectedRoute>} />

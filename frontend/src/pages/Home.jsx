@@ -1,123 +1,150 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { ShieldCheck, Activity, Video, ArrowRight, Lock, Globe } from 'lucide-react';
 
 const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const handleCTA = () => {
+    if (user?.role === 'patient') navigate('/dashboard');
+    else if (user?.role === 'therapist') navigate('/therapist/dashboard');
+    else if (user?.role === 'admin') navigate('/admin/dashboard');
+    else navigate('/auth');
+  };
+
   return (
-    <div className="font-sans flex flex-col relative bg-slate-50">
-
-      {/* Hero Section */}
-      <main className="flex-1 pt-32 pb-20 overflow-hidden relative flex flex-col items-center justify-center">
-        {/* Absolute Backgrounds */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-50 via-white to-fuchsia-50 -z-20"></div>
-        <div className="absolute top-10 left-1/4 w-96 h-96 bg-cyan-200/40 rounded-full blur-3xl -z-10 mix-blend-multiply pointer-events-none"></div>
-        <div className="absolute bottom-10 right-1/4 w-96 h-96 bg-fuchsia-200/40 rounded-full blur-3xl -z-10 mix-blend-multiply pointer-events-none"></div>
-
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-16 px-8 max-w-7xl mx-auto w-full z-10">
-          {/* Left Column */}
-          <div className="flex-1 text-center md:text-left flex flex-col items-center md:items-start">
-            <div className="inline-block px-4 py-1.5 mb-6 rounded-full bg-cyan-100 border border-cyan-200">
-              <span className="text-sm font-semibold text-cyan-800 uppercase tracking-wider">
-                Your journey to wellbeing starts here
+    <div className="font-sans flex flex-col relative bg-white">
+      
+      {/* 1. HERO SECTION: Institutional Authority */}
+      <main className="relative pt-32 pb-24 lg:pt-40 lg:pb-32 overflow-hidden border-b border-slate-100">
+        <div className="absolute inset-0 bg-slate-50/50 -z-20"></div>
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-teal-50/50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/4"></div>
+        
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-8 relative z-10">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-teal-50 border border-teal-100">
+              <ShieldCheck className="h-4 w-4 text-[#0F766E]" />
+              <span className="text-xs font-bold text-[#0F766E] uppercase tracking-widest">
+                Healthcare-Grade Encryption
               </span>
             </div>
             
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-slate-900 leading-tight mb-8">
-              Nurture your mind, <br/>
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-600 to-fuchsia-600">
-                find your elixir
-              </span>
+            <h1 className="text-5xl lg:text-7xl font-heading font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
+              A Centre of Excellence. <br/>
+              <span className="text-[#0F766E]">Uncompromising Privacy.</span>
             </h1>
             
-            <p className="text-xl text-slate-600 max-w-xl mb-10 leading-relaxed">
-              Access professional mental health support from anywhere in Uganda. Secure, confidential, and tailored to your needs.
+            <p className="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-medium max-w-2xl">
+              Butabika National Referral Mental Hospital brings the highest standard of clinical care directly to you. Distance is no longer a barrier to accessing the region's top professionals.
             </p>
             
             <div className="flex flex-col sm:flex-row items-center gap-4">
               <button 
-                onClick={() => {
-                  if (user?.role === 'patient') navigate('/dashboard');
-                  else if (user?.role === 'therapist') navigate('/therapist/dashboard');
-                  else navigate('/auth', { state: { isSignUp: false } });
-                }}
-                className="bg-cyan-500 hover:bg-cyan-600 text-white rounded-full px-8 py-4 font-semibold text-lg transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5 whitespace-nowrap"
+                onClick={handleCTA}
+                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-lg px-8 py-4 font-bold text-base transition-all shadow-md group"
               >
-                Start Your Journey
+                {user ? 'Go to Dashboard' : 'Access Patient Portal'}
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </button>
-              <button 
-                onClick={() => navigate('/about')}
-                className="border-2 border-cyan-200 text-cyan-700 bg-cyan-50/50 hover:bg-cyan-100 font-medium px-6 py-3 rounded-full transition-all shadow-sm whitespace-nowrap"
-              >
-                Learn More
-              </button>
-            </div>
-          </div>
-
-          {/* Right Column (Breathing Animation) */}
-          <div className="flex-1 w-full max-w-md">
-            <div className="glass aspect-square mx-auto relative rounded-3xl flex items-center justify-center p-8 overflow-hidden">
-              {/* Watermark Logo */}
-              <img 
-                src="/butabika.png" 
-                alt="Watermark" 
-                className="absolute opacity-30 w-48 h-48 object-contain pointer-events-none"
-              />
-              {/* Breathing Circle */}
-              <div className="absolute w-72 h-72 bg-cyan-400/40 rounded-full animate-breathe pointer-events-none"></div>
-              {/* Text */}
-              <span className="z-10 text-slate-700 text-2xl font-light tracking-wide pointer-events-none">
-                Breathe
-              </span>
+              {!user && (
+                <button 
+                  onClick={() => navigate('/therapist/auth')}
+                  className="w-full sm:w-auto flex items-center justify-center bg-white border-2 border-slate-200 text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] font-bold px-8 py-4 rounded-lg transition-all shadow-sm"
+                >
+                  Provider Sign In
+                </button>
+              )}
             </div>
           </div>
         </div>
       </main>
 
-      {/* Our Services Section */}
-      <section className="py-20 bg-cyan-50">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <h2 className="text-3xl font-medium mb-4">Our Services</h2>
-          <p className="text-slate-600">Explore the different tools and resources available to support your mental wellness journey.</p>
+      {/* 2. TRUST BAR: Clinical Validation */}
+      <div className="border-b border-slate-100 bg-white py-8">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-slate-100">
+            <div className="py-2">
+              <p className="text-3xl font-black text-slate-900">18+</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Age Verification Required</p>
+            </div>
+            <div className="py-2">
+              <p className="text-3xl font-black text-slate-900">256-Bit</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">End-to-End Encryption</p>
+            </div>
+            <div className="py-2">
+              <p className="text-3xl font-black text-slate-900">7</p>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Validated Clinical Instruments</p>
+            </div>
+          </div>
         </div>
-        <div className="container mx-auto px-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div onClick={() => navigate('/exercises')} className="rounded-xl p-6 transition-all duration-300 h-full bg-cyan-100 hover:bg-cyan-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
-              <div className="text-3xl mb-4">🧘</div>
-              <h3 className="text-lg font-medium mb-2 text-cyan-700">Breathing Exercises</h3>
-              <p className="text-slate-600 text-sm">Practice guided breathing techniques to reduce anxiety and promote relaxation.</p>
+      </div>
+
+      {/* 3. CORE FEATURES: The Clinical Engine */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
+          <div className="mb-16 max-w-2xl">
+            <h2 className="text-3xl lg:text-4xl font-heading font-bold text-slate-900 mb-4 tracking-tight">
+              Evidence-Based Digital Care
+            </h2>
+            <p className="text-base text-slate-500 font-medium">
+              A comprehensive clinical suite designed to track, manage, and improve your mental wellbeing securely.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {/* Feature 1 */}
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-teal-50 rounded-xl flex items-center justify-center mb-6">
+                <Activity className="h-6 w-6 text-[#0F766E]" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-3">Dynamic Clinical Scoring</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Access globally recognized assessments (PHQ-9, GAD-7, PCL-5) with immediate severity classification and historical tracking saved directly to your private profile.
+              </p>
             </div>
-            <div onClick={() => navigate('/journal')} className="rounded-xl p-6 transition-all duration-300 h-full bg-fuchsia-100 hover:bg-fuchsia-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
-              <div className="text-3xl mb-4">📊</div>
-              <h3 className="text-lg font-medium mb-2 text-fuchsia-700">Mood Tracking</h3>
-              <p className="text-slate-600 text-sm">Record your daily moods and journal your thoughts to identify patterns and gain insights.</p>
+
+            {/* Feature 2 */}
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-6">
+                <Video className="h-6 w-6 text-blue-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-3">Encrypted Telehealth</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Connect with certified specialists via time-locked, embedded HD video rooms. Supported by strict clinical hour enforcement and anonymous display IDs.
+              </p>
             </div>
-            <div onClick={() => navigate('/screenings')} className="rounded-xl p-6 transition-all duration-300 h-full bg-indigo-100 hover:bg-indigo-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
-              <div className="text-3xl mb-4">📋</div>
-              <h3 className="text-lg font-medium mb-2 text-indigo-700">Mental Health Screening</h3>
-              <p className="text-slate-600 text-sm">Evidence-based screening tools to better understand your mental health and wellbeing.</p>
-            </div>
-            <div onClick={() => navigate('/resources')} className="rounded-xl p-6 transition-all duration-300 h-full bg-amber-100 hover:bg-amber-200 transform hover:-translate-y-1 hover:shadow-md cursor-pointer">
-              <div className="text-3xl mb-4">📚</div>
-              <h3 className="text-lg font-medium mb-2 text-amber-700">Health Resources</h3>
-              <p className="text-slate-600 text-sm">Access our collection of mental health resources, articles, and helpful techniques.</p>
+
+            {/* Feature 3 */}
+            <div className="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm hover:shadow-md transition-shadow">
+              <div className="w-12 h-12 bg-fuchsia-50 rounded-xl flex items-center justify-center mb-6">
+                <Globe className="h-6 w-6 text-fuchsia-600" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-900 mb-3">Cognitive Behavioral Tools</h3>
+              <p className="text-sm text-slate-500 leading-relaxed font-medium">
+                Utilize structured CBT thought records, sleep hygiene tracking, and guided mindfulness pacers designed to manage panic and acute anxiety.
+              </p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Begin Your Journey Section */}
-      <section className="py-16 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-3xl mx-auto glass rounded-2xl p-8 text-center">
-            <h2 className="text-2xl font-medium mb-4">Begin Your Journey Today</h2>
-            <p className="text-slate-600 mb-6">Take the first step toward better mental wellbeing. Our tools and resources are here to support you.</p>
-            <button onClick={() => navigate('/about')} className="bg-cyan-500 hover:bg-cyan-600 text-white font-medium px-6 py-3 rounded-full transition-colors">Learn More</button>
-          </div>
+      {/* 4. CLOSING CTA */}
+      <section className="py-24 bg-white border-t border-slate-100">
+        <div className="max-w-4xl mx-auto px-6 text-center">
+          <h2 className="text-3xl font-heading font-bold text-slate-900 mb-6 tracking-tight">Ready to prioritize your wellbeing?</h2>
+          <p className="text-lg text-slate-500 mb-8 font-medium">Join the thousands of Ugandans accessing secure, professional mental health support through Butabika Cares.</p>
+          <button 
+            onClick={handleCTA} 
+            className="bg-[#0F766E] hover:bg-[#115E59] text-white font-bold px-10 py-4 rounded-lg shadow-md transition-all inline-flex items-center gap-2 group"
+          >
+            Create Your Secure Account
+            <Lock className="h-4 w-4 group-hover:scale-110 transition-transform" />
+          </button>
         </div>
       </section>
+
     </div>
   );
 };

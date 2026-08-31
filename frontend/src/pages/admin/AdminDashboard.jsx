@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Users, UserCog, Activity, Download, LogOut, AlertTriangle, CheckCircle, XCircle, CreditCard } from 'lucide-react';
+import { Users, UserCog, Activity, Download, LogOut, AlertTriangle, CheckCircle, XCircle, CreditCard, Camera } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext'; // Adjust path if needed
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('overview');
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   const [tFirstName, setTFirstName] = useState('');
   const [tLastName, setTLastName] = useState('');
@@ -24,20 +24,23 @@ export default function AdminDashboard() {
   const [analytics, setAnalytics] = useState({ totalUsers: '--', activeTherapists: '--', completedSessions: '--' });
   const [usersList, setUsersList] = useState([]);
   const [crisisAlerts, setCrisisAlerts] = useState([]);
+  const [pendingAvatars, setPendingAvatars] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [smsRes, analyticsRes, usersRes, alertsRes] = await Promise.all([
+        const [smsRes, analyticsRes, usersRes, alertsRes, avatarsRes] = await Promise.all([
           axios.get(`${import.meta.env.VITE_API_URL}/api/admin/sms-balance`, { withCredentials: true }),
           axios.get(`${import.meta.env.VITE_API_URL}/api/admin/analytics`, { withCredentials: true }),
           axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users`, { withCredentials: true }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/crisis-alerts`, { withCredentials: true })
+          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/crisis-alerts`, { withCredentials: true }),
+          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/avatars/pending`, { withCredentials: true }).catch(() => ({ data: [] }))
         ]);
         setSmsBalance(smsRes.data.balance);
         setAnalytics(analyticsRes.data);
         setUsersList(usersRes.data);
         setCrisisAlerts(alertsRes.data);
+        setPendingAvatars(avatarsRes.data);
       } catch (err) {
         console.error('Failed to fetch admin data', err);
       }
@@ -45,11 +48,27 @@ export default function AdminDashboard() {
     fetchData();
   }, [activeTab]);
 
+  const handleApproveAvatar = async (providerId) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/avatar/approve`, { provider_id: providerId }, { withCredentials: true });
+      setPendingAvatars(prev => prev.filter(p => p.id !== providerId));
+      toast.success('Avatar approved');
+    } catch { toast.error('Failed to approve avatar'); }
+  };
+
+  const handleRejectAvatar = async (providerId) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/avatar/reject`, { provider_id: providerId }, { withCredentials: true });
+      setPendingAvatars(prev => prev.filter(p => p.id !== providerId));
+      toast.success('Avatar rejected');
+    } catch { toast.error('Failed to reject avatar'); }
+  };
+
   const handleToggleUserStatus = async (userId, currentStatus) => {
     try {
       await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/users/${userId}/status`, { is_active: !currentStatus }, { withCredentials: true });
       setUsersList(usersList.map(u => u.id === userId ? { ...u, is_active: !currentStatus } : u));
-    } catch (err) {
+    } catch {
       toast.error('Failed to update user status');
     }
   };
@@ -71,7 +90,7 @@ export default function AdminDashboard() {
       setTSuccess('Therapist profile created successfully.');
       setTFirstName(''); setTLastName(''); setTEmail(''); setTPhone(''); setTPassword(''); setTSpecialization(''); setTCredentials('');
     } catch (err) {
-      if (err.response && err.response.data && err.response.data.error) {
+      if (err?.response?.data?.error) {
         setTError(err.response.data.error);
       } else {
         setTError('Failed to create therapist profile.');
@@ -125,7 +144,8 @@ export default function AdminDashboard() {
             { id: 'overview', label: 'System Overview', icon: Activity },
             { id: 'alerts', label: 'Crisis Alerts', icon: AlertTriangle },
             { id: 'users', label: 'Manage Users', icon: Users },
-            { id: 'therapists', label: 'Manage Therapists', icon: UserCog }
+            { id: 'therapists', label: 'Manage Therapists', icon: UserCog },
+            { id: 'moderation', label: 'Avatar Moderation', icon: Camera }
           ].map((tab) => (
             <button
               key={tab.id}
@@ -297,6 +317,45 @@ export default function AdminDashboard() {
                   Create Therapist Profile
                 </button>
               </form>
+            </div>
+          )}
+
+          {activeTab === 'moderation' && (
+            <div>
+              <h2 className="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
+                <Camera className="h-5 w-5 text-[#0F766E]" /> PENDING AVATAR MODERATION
+              </h2>
+              {pendingAvatars.length === 0 ? (
+                <div className="text-center py-12 text-slate-500 font-medium">No pending avatar approvals.</div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {pendingAvatars.map(provider => (
+                    <div key={provider.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
+                      <div className="h-48 bg-slate-50 flex items-center justify-center p-4">
+                        <img src={`${import.meta.env.VITE_API_URL}${provider.profile_picture}`} alt="Pending Avatar" className="w-32 h-32 rounded-full object-cover border-[3px] border-white shadow-sm" />
+                      </div>
+                      <div className="p-5 flex-1 flex flex-col text-center border-t border-slate-100">
+                        <h3 className="text-lg font-bold text-slate-900">{provider.first_name} {provider.last_name}</h3>
+                        <p className="text-slate-500 font-mono text-xs mt-1 mb-6">License: {provider.license_number || 'N/A'}</p>
+                        <div className="mt-auto flex flex-col gap-2.5">
+                          <button 
+                            onClick={() => handleApproveAvatar(provider.id)}
+                            className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white py-2.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm transition-colors"
+                          >
+                            Approve Image
+                          </button>
+                          <button 
+                            onClick={() => handleRejectAvatar(provider.id)}
+                            className="w-full bg-white border border-red-600 hover:bg-red-50 text-red-600 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm transition-colors"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 

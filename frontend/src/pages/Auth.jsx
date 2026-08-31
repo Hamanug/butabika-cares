@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Eye, EyeOff, ArrowLeft, ShieldCheck } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, ShieldCheck, Activity, Video, Lock, Globe } from 'lucide-react';
 
 const calculateAge = (dobString) => {
   const birthDate = new Date(dobString);
@@ -226,9 +226,18 @@ const Auth = () => {
           
           {/* Centered Logo & Headers */}
           <div className="mb-10 flex flex-col items-center text-center">
-            <img src="/butabika.png" alt="Butabika Cares" className="h-28 w-auto object-contain drop-shadow-md mb-6" />
+            <Link to="/" className="mb-6 hover:opacity-80 transition-opacity flex flex-col items-center">
+              {/* Mobile: Official Crest */}
+              <img src="/butabika.png" alt="Butabika Hospital" className="h-16 w-auto object-contain drop-shadow-sm lg:hidden mb-2" />
+              
+              {/* Desktop: Premium Eyebrow Text */}
+              <span className="hidden lg:block font-heading text-xs md:text-sm font-black text-[#0F766E]/70 uppercase tracking-[0.25em] drop-shadow-sm">
+                Butabika Cares
+              </span>
+            </Link>
             
-            <h1 className="font-heading text-4xl font-bold tracking-tight text-[#115E59]">
+            {/* Main Header shifted to Slate to prevent color clashing */}
+            <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
               {step === 'form' && (isSignUp ? 'Create Account' : 'Welcome Back')}
               {step === 'confirm' && 'Confirm Number'}
               {step === 'verify' && 'Verify Number'}
@@ -236,7 +245,7 @@ const Auth = () => {
               {step === 'forgot_verify' && 'Verify Recovery Code'}
               {step === 'forgot_reset' && 'Create New Password'}
             </h1>
-            <p className="mt-3 text-base font-medium text-slate-500">
+            <p className="mt-3 text-sm md:text-base font-medium text-slate-500">
               {step === 'form' && (isSignUp ? 'Begin your mental health journey securely.' : 'Please enter your details to sign in.')}
               {step === 'forgot_phone' && "Enter your registered phone number and we'll send a code to reset your password."}
               {step === 'confirm' && "Verify this is the correct number before we send a code."}
@@ -424,7 +433,7 @@ const Auth = () => {
 
           {/* Mobile Branding & Legal Footer */}
           <div className="mt-12 flex flex-col items-center justify-center space-y-3 border-t border-slate-200/60 pt-6 pb-8 lg:pb-0 animate-fade-in-up">
-            <p className="text-xs font-medium text-slate-400 text-center tracking-wide">
+            <p className="lg:hidden text-xs font-medium text-slate-400 text-center tracking-wide">
               © {new Date().getFullYear()} Butabika National Referral Mental Hospital
             </p>
             <div className="flex gap-6 text-xs font-bold text-[#155E75]">
@@ -436,31 +445,71 @@ const Auth = () => {
       </div>
 
       {/* Right Column: Premium Hospital Branding Visual */}
-      <div className="relative hidden w-1/2 lg:flex flex-col justify-between overflow-hidden bg-gradient-to-br from-[#0F766E] via-[#0369A1] to-[#0F172A]">
+      <div className="relative hidden w-1/2 lg:flex flex-col overflow-hidden bg-gradient-to-br from-[#0F766E] via-[#0369A1] to-[#0F172A]">
+        
         {/* Animated ambient mesh gradients */}
         <div className="absolute top-0 left-0 h-full w-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
         <div className="absolute -top-32 -right-32 h-96 w-96 rounded-full bg-teal-400/20 blur-3xl animate-breathe"></div>
         <div className="absolute -bottom-32 -left-32 h-96 w-96 rounded-full bg-blue-500/20 blur-3xl animate-breathe animation-delay-200"></div>
         
-        {/* Main Graphic Centerpiece */}
+        {/* THE WATERMARK */}
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden">
+          <img 
+            src="/butabika.png" 
+            alt="Butabika Watermark" 
+            className="h-[120%] w-auto object-contain opacity-[0.07] grayscale mix-blend-overlay" 
+          />
+        </div>
+
+        {/* Main Graphic Centerpiece (Perfectly Centered) */}
         <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12">
-          <div className="mb-10 rounded-3xl bg-white/10 p-10 backdrop-blur-md border border-white/20 shadow-2xl">
-             <img src="/butabika.png" alt="Butabika Logo" className="h-40 w-auto object-contain drop-shadow-xl brightness-110" />
-          </div>
           
-          <div className="text-center max-w-md">
-            <h2 className="font-heading text-4xl font-bold text-white mb-6 drop-shadow-md leading-tight">
-              Clinical Excellence. <br/><span className="text-teal-200">Digital Privacy.</span>
+          <div className="text-left w-full max-w-xl bg-slate-900/40 p-10 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl animate-fade-in-up">
+            <h2 className="font-heading text-3xl font-bold text-white mb-4 drop-shadow-md leading-tight">
+              A Centre of Excellence. <br/><span className="text-teal-400">Uncompromising Privacy.</span>
             </h2>
-            <p className="text-lg text-slate-200 leading-relaxed font-light">
-              Your mental health journey is protected by enterprise-grade encryption. Information is securely transmitted and accessible only by your certified care team.
+            <p className="text-base text-slate-200 mb-8 leading-relaxed font-light">
+              Butabika National Referral Mental Hospital brings the highest standard of clinical care directly to you, removing geographical barriers to the region's top professionals.
             </p>
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="mt-1 bg-teal-500/20 p-2 rounded-lg border border-teal-500/30 shadow-sm shrink-0">
+                  <Activity className="h-5 w-5 text-teal-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Comprehensive Care</h3>
+                  <p className="text-sm text-slate-300 font-light leading-relaxed">Access wellness screenings, family counseling, and specialized recovery support.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="mt-1 bg-blue-500/20 p-2 rounded-lg border border-blue-500/30 shadow-sm shrink-0">
+                  <ShieldCheck className="h-5 w-5 text-blue-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">Healthcare-Grade Security</h3>
+                  <p className="text-sm text-slate-300 font-light leading-relaxed">Your data, clinical assessments, and sessions are protected by uncompromising encryption.</p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-4">
+                <div className="mt-1 bg-fuchsia-500/20 p-2 rounded-lg border border-fuchsia-500/30 shadow-sm shrink-0">
+                  <Globe className="h-5 w-5 text-fuchsia-300" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-1">International Standards</h3>
+                  <p className="text-sm text-slate-300 font-light leading-relaxed">Delivered by certified specialists and backed by global health partners.</p>
+                </div>
+              </div>
+            </div>
           </div>
+
         </div>
 
         {/* Footer subtle text for right side */}
-        <div className="relative z-10 p-8 text-center">
-          <p className="text-sm text-slate-400 font-medium">© {new Date().getFullYear()} Butabika National Referral Mental Hospital</p>
+        <div className="relative z-10 pb-8 text-center">
+          <p className="text-sm text-slate-400/80 font-medium tracking-wide">© {new Date().getFullYear()} Butabika National Referral Mental Hospital</p>
         </div>
       </div>
     </div>

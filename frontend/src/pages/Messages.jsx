@@ -141,7 +141,7 @@ export default function Messages() {
                     <div 
                         key={contact.id} 
                         onClick={() => setActiveChat(contact)}
-                        className={`p-4 border-b border-slate-50 cursor-pointer flex items-center transition-colors ${isActive ? 'bg-orange-50' : 'hover:bg-slate-50'}`}
+                        className={`p-4 border-b border-slate-50 cursor-pointer flex items-center transition-colors ${isActive ? 'bg-teal-50' : 'hover:bg-slate-50'}`}
                     >
                         <div className="relative">
                             <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold">
@@ -152,7 +152,7 @@ export default function Messages() {
                             )}
                         </div>
                         <div className="ml-3 overflow-hidden">
-                            <h3 className={`text-sm font-medium truncate ${isActive ? 'text-orange-900' : 'text-slate-900'}`}>
+                            <h3 className={`text-sm font-medium truncate ${isActive ? 'text-teal-900' : 'text-slate-900'}`}>
                                 {contact.first_name} {contact.last_name}
                             </h3>
                             <p className="text-xs text-slate-500 truncate">
@@ -170,7 +170,7 @@ export default function Messages() {
         {activeChat ? (
           <>
             <div className="p-4 border-b border-slate-200 bg-white flex items-center shadow-sm z-10">
-              <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-700 font-bold mr-3">
+              <div className="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center text-[#0F766E] font-bold mr-3">
                 {getInitials(activeChat.first_name, activeChat.last_name)}
               </div>
               <div>
@@ -195,11 +195,11 @@ export default function Messages() {
                         <div key={msg.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
                             <div className={`max-w-[70%] rounded-2xl px-4 py-2 shadow-sm ${
                                 isMine 
-                                    ? 'bg-[#e87a5d] text-white rounded-tr-none' 
+                                    ? 'bg-[#0F766E] text-white rounded-tr-none' 
                                     : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'
                             }`}>
                                 <p className="text-sm break-words whitespace-pre-wrap">{msg.content}</p>
-                                <span className={`text-[10px] mt-1 block text-right ${isMine ? 'text-orange-100' : 'text-slate-400'}`}>
+                                <span className={`text-[10px] mt-1 block text-right ${isMine ? 'text-teal-100' : 'text-slate-400'}`}>
                                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                 </span>
                             </div>
@@ -217,12 +217,12 @@ export default function Messages() {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 px-4 py-2 border border-slate-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#e87a5d] focus:border-[#e87a5d] text-sm text-slate-900"
+                  className="flex-1 px-4 py-2 border border-slate-300 rounded-full focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] text-sm text-slate-900"
                 />
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
-                  className="h-10 w-10 rounded-full bg-[#e87a5d] hover:bg-[#d6694c] flex items-center justify-center text-white disabled:opacity-50 transition-colors shrink-0"
+                  className="h-10 w-10 rounded-full bg-[#0F766E] hover:bg-[#115E59] flex items-center justify-center text-white disabled:opacity-50 transition-colors shrink-0"
                 >
                   <Send className="h-4 w-4 ml-0.5" />
                 </button>

@@ -5,9 +5,10 @@ import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import axios from 'axios';
 import { formatUserName } from '../utils/formatters';
+import { Button } from './ui/Button';
 
 const Navbar = () => {
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { socket } = useSocket();
   const navigate = useNavigate();
   const location = useLocation();
@@ -26,6 +27,23 @@ const Navbar = () => {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Lock body scroll when mobile menu is open
+  useEffect(() => {
+    if (isMobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isMobileMenuOpen]);
+
+  // Close mobile menu on route change
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
     let intervalId;
@@ -53,7 +71,7 @@ const Navbar = () => {
   useEffect(() => {
     if (!socket) return;
     
-    const handleReceiveMessage = (message) => {
+    const handleReceiveMessage = (_message) => {
       if (location.pathname !== '/messages') {
         setUnreadCount(prev => prev + 1);
       }
@@ -91,157 +109,192 @@ const Navbar = () => {
     return '/';
   };
 
-  const getAvatarText = () => {
-    if (user?.name) {
-      const parts = user.name.split(' ').filter(Boolean);
-      if (parts.length > 1) {
-        return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-      }
-      return parts[0].substring(0, 2).toUpperCase();
-    }
-    return "User";
+  const getNavLinkClass = (path) => {
+    return location.pathname === path
+      ? "px-4 py-2 text-[15px] font-bold text-[#0F766E] bg-teal-50/80 rounded-full transition-all duration-200 whitespace-nowrap"
+      : "px-4 py-2 text-[15px] font-medium text-slate-500 hover:text-[#0F766E] hover:bg-slate-50 rounded-full transition-all duration-200 whitespace-nowrap";
+  };
+
+  const getMobileNavLinkClass = (path) => {
+    return location.pathname === path
+      ? "block w-full px-5 py-3.5 text-base font-bold text-[#0F766E] bg-teal-50/50 rounded-xl border-l-4 border-[#0F766E] transition-all duration-200 shadow-sm"
+      : "block w-full px-5 py-3.5 text-base font-medium text-slate-600 hover:text-[#0F766E] hover:bg-slate-50 rounded-xl border-l-4 border-transparent transition-all duration-200";
   };
 
   return (
-    <header className="px-4 md:px-8 bg-white/80 backdrop-blur-md shadow-sm fixed w-full top-0 z-50">
-      <nav className="flex items-center justify-between w-full h-16 gap-4">
-        {/* Left Zone: Brand & Nav */}
-        <div className="flex items-center gap-2">
-        <Link to={getLogoPath()} className="flex items-center gap-3 mr-4 lg:mr-8">
-          <img src="/butabika.png" alt="Butabika Logo" className="h-8 md:h-12 w-auto object-contain" />
-          <span className="text-[13px] sm:text-base md:text-2xl font-black bg-clip-text text-transparent bg-gradient-to-r from-cyan-600 to-fuchsia-600 tracking-tight whitespace-nowrap">BUTABIKA CARES</span>
-        </Link>
-        <div className="hidden lg:flex gap-4 md:gap-6 text-sm md:text-base whitespace-nowrap">
-          {(!user || (user.role !== 'therapist' && user.role !== 'admin')) ? (
-            <>
-              <Link to="/" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Home</Link>
-              <Link to="/about" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">About</Link>
-              <Link to="/resources" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Resources</Link>
-              <Link to="/therapists" className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Therapists</Link>
-              {user && <Link to={getDashboardPath()} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
-            </>
-          ) : (
-            <Link to={getDashboardPath()} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>
-          )}
-        </div>
-      </div>
-
-      {/* Middle Zone: Sponsors */}
-      <div className="hidden xl:flex items-center justify-center gap-4 px-4 border-l border-r border-slate-200/60 my-2">
-        <span className="whitespace-nowrap text-[10px] font-bold text-slate-400 uppercase tracking-widest mr-2 select-none">Supported By</span>
-        <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer">
-          <img src="/catalonia.png" alt="Catalonia Logo" className="h-8 md:h-10 w-auto object-contain hover:opacity-80 transition-opacity" />
-        </a>
-        <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer">
-          <img src="/aha.png" alt="AHA Logo" className="h-7 md:h-9 w-auto object-contain hover:opacity-80 transition-opacity" />
-        </a>
-        <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer">
-          <img src="/famamundi.jpeg" alt="Famamundi Logo" className="h-7 md:h-9 w-auto object-contain hover:opacity-80 transition-opacity" />
-        </a>
-      </div>
-
-      {/* Right Zone: Auth Dropdown */}
-      <div className="flex items-center gap-2 md:gap-4 relative">
-        {!user && !isAuthPage && (
-          <button
-            onClick={() => navigate('/auth')}
-            className="whitespace-nowrap px-3 py-1.5 md:px-4 md:py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-full text-sm font-medium transition-colors shadow-sm"
-          >
-            Sign In
-          </button>
-        )}
+    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 fixed w-full top-0 z-50 transition-all duration-300 shadow-sm">
+      <nav className="flex items-center justify-between w-full h-20 gap-2 sm:gap-4 max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8">
         
-        {user && (
-          <>
-            {user.role !== 'admin' && (
-              <button onClick={() => navigate('/messages')} className="relative text-slate-500 hover:text-slate-900 transition-colors flex items-center justify-center h-9 w-9 rounded-full hover:bg-slate-100 mr-2">
-                <MessageSquare className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <span className="absolute top-0 right-0 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
-                    {unreadCount}
-                  </span>
-                )}
-              </button>
-            )}
-            <div className="relative" ref={dropdownRef}>
-            <button 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center justify-center h-10 w-10 rounded-full border border-slate-200 bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer ml-2"
-            >
-              <User className="h-5 w-5" />
-            </button>
-            
-            {isDropdownOpen && (
-              <>
-                <div 
-                  className="fixed inset-0 z-40" 
-                  onClick={() => setIsDropdownOpen(false)}
-                ></div>
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-md shadow-lg border border-slate-100 z-50">
-                  <div className="border-b border-slate-100 pb-2 mb-2 px-4 pt-2 text-slate-800 truncate font-medium">
-                    {formatUserName(user)}
-                  </div>
-                  <Link
-                    to="/profile"
-                    className="block px-4 py-2 text-slate-600 hover:bg-slate-50"
-                    onClick={() => setIsDropdownOpen(false)}
-                  >
-                    My Profile
-                  </Link>
-                  <button
-                    onClick={() => {
-                      setIsDropdownOpen(false);
-                      logout();
-                      navigate('/');
-                    }}
-                    className="w-full text-left block px-4 py-2 text-red-500 hover:bg-red-50 rounded-b-md"
-                  >
-                    Sign out
-                  </button>
-                </div>
-              </>
+        {/* Left Zone: Brand & Nav Links */}
+        <div className="flex items-center gap-4 lg:gap-8 flex-shrink-0">
+          <Link to={getLogoPath()} className="flex items-center gap-2 sm:gap-3 group">
+            <img src="/butabika.png" alt="Butabika Logo" className="h-9 sm:h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" />
+            <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tight hidden md:block">
+              <span className="text-slate-900">Butabika</span> <span className="text-[#0F766E]">Cares</span>
+            </span>
+          </Link>
+          
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex gap-1 xl:gap-2 items-center ml-2 xl:ml-4">
+            {isLoading ? (
+              <div className="flex gap-6 animate-pulse opacity-40">
+                <div className="h-5 w-12 bg-slate-200 rounded"></div>
+                <div className="h-5 w-12 bg-slate-200 rounded"></div>
+                <div className="h-5 w-16 bg-slate-200 rounded"></div>
+              </div>
+            ) : (
+              (!user || (user.role !== 'therapist' && user.role !== 'admin')) ? (
+                <>
+                  <Link to="/" className={getNavLinkClass('/')}>Home</Link>
+                  <Link to="/about" className={getNavLinkClass('/about')}>About</Link>
+                  <Link to="/resources" className={getNavLinkClass('/resources')}>Resources</Link>
+                  <Link to="/therapists" className={getNavLinkClass('/therapists')}>Therapists</Link>
+                  {user && <Link to={getDashboardPath()} className={getNavLinkClass(getDashboardPath())}>Dashboard</Link>}
+                </>
+              ) : (
+                <Link to={getDashboardPath()} className={getNavLinkClass(getDashboardPath())}>Workspace</Link>
+              )
             )}
           </div>
-          </>
-        )}
+        </div>
 
-        {/* Mobile Hamburger Menu */}
-        <button 
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="lg:hidden ml-2 text-slate-600 hover:text-cyan-600 focus:outline-none"
-        >
-          {isMobileMenuOpen ? (
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-            </svg>
+        {/* Right Zone: Sponsors & Profile */}
+        <div className="flex items-center gap-2 sm:gap-4 relative min-w-0 justify-end">
+          
+          {/* Integrated Sponsors (Desktop Only - strictly hidden on lg and below) */}
+          <div className="hidden xl:flex items-center gap-5 pr-5 border-r border-slate-200 mr-2 flex-shrink-0">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">Supported By</span>
+            <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer">
+              <img src="/catalonia.png" alt="Catalonia" className="h-5 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+            </a>
+            <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer">
+              <img src="/aha.png" alt="AHA" className="h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+            </a>
+            <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer">
+              <img src="/famamundi.jpeg" alt="Farmamundi" className="h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+            </a>
+          </div>
+
+          {isLoading ? (
+            <div className="h-10 w-10 bg-slate-200 rounded-full animate-pulse opacity-50 hidden sm:block flex-shrink-0"></div>
           ) : (
-            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16"></path>
-            </svg>
+            <>
+              {!user && !isAuthPage && (
+                <Button onClick={() => navigate('/auth')} size="sm" className="hidden sm:flex rounded-full px-6 py-5 shadow-sm bg-[#0F766E] hover:bg-[#115E59] text-[15px] font-bold text-white flex-shrink-0">
+                  Sign In
+                </Button>
+              )}
+              
+              {user && (
+                <>
+                  {user.role !== 'admin' && (
+                    <button onClick={() => navigate('/messages')} className="relative text-slate-500 hover:text-[#0F766E] transition-colors flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-slate-50 hover:bg-teal-50 border border-transparent hover:border-teal-100 flex-shrink-0">
+                      <MessageSquare className="h-4 w-4 sm:h-5 sm:w-5" />
+                      {unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white shadow-sm ring-2 ring-white">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </button>
+                  )}
+                  <div className="relative flex-shrink-0" ref={dropdownRef}>
+                    <button 
+                      onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                      className="flex items-center justify-center h-9 w-9 sm:h-10 sm:w-10 rounded-full bg-slate-50 border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-[#0F766E] transition-colors cursor-pointer focus:ring-2 focus:ring-[#0F766E]/20 shadow-sm"
+                    >
+                      <User className="h-4 w-4 sm:h-5 sm:w-5" />
+                    </button>
+                    
+                    {isDropdownOpen && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>
+                        <div className="absolute right-0 top-full mt-3 w-56 bg-white rounded-xl shadow-xl border border-slate-100 z-50 overflow-hidden animate-fade-in-up">
+                          <div className="border-b border-slate-100 pb-3 mb-1 px-4 pt-4 bg-slate-50/50">
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Signed in as</p>
+                            <p className="text-sm text-slate-900 truncate font-bold">{formatUserName(user)}</p>
+                          </div>
+                          <Link
+                            to="/profile"
+                            className="block px-4 py-3 text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-[#0F766E] transition-colors"
+                            onClick={() => setIsDropdownOpen(false)}
+                          >
+                            My Profile
+                          </Link>
+                          <button
+                            onClick={() => {
+                              setIsDropdownOpen(false);
+                              logout();
+                              navigate('/');
+                            }}
+                            className="w-full text-left block px-4 py-3 text-sm font-bold text-red-600 hover:bg-red-50 transition-colors"
+                          >
+                            Sign Out
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
           )}
-        </button>
-      </div>
+
+          {/* Mobile Hamburger Menu */}
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            className="lg:hidden text-slate-600 hover:text-[#0F766E] focus:outline-none transition-colors h-9 w-9 sm:h-10 sm:w-10 flex items-center justify-center bg-slate-50 rounded-md border border-slate-200 shadow-sm flex-shrink-0"
+          >
+            {isMobileMenuOpen ? (
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M6 18L18 6M6 6l12 12"></path></svg>
+            ) : (
+              <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+            )}
+          </button>
+        </div>
       </nav>
 
-      {/* Mobile Nav Dropdown */}
+      {/* Mobile Nav Full-Height Drawer */}
       {isMobileMenuOpen && (
-        <div className="lg:hidden absolute top-16 left-0 w-full bg-white border-t border-slate-100 shadow-lg px-6 py-4 flex flex-col gap-4 z-40">
-          {(!user || (user.role !== 'therapist' && user.role !== 'admin')) ? (
-            <>
-              <Link to="/" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Home</Link>
-              <Link to="/about" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">About</Link>
-              <Link to="/resources" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Resources</Link>
-              <Link to="/therapists" onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Therapists</Link>
-              {user && <Link to={getDashboardPath()} onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>}
-            </>
-          ) : (
-            <Link to={getDashboardPath()} onClick={() => setIsMobileMenuOpen(false)} className="text-base font-medium text-slate-600 hover:text-cyan-600 transition-colors">Dashboard</Link>
-          )}
-          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest text-center mt-6 pt-4 border-t border-slate-100 mb-4">Supported By</div>
-          <div className="flex items-center justify-center gap-4">
-            <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer"><img src="/catalonia.png" alt="Catalonia" className="h-6 w-auto object-contain" /></a>
-            <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer"><img src="/aha.png" alt="AHA" className="h-5 w-auto object-contain" /></a>
-            <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer"><img src="/famamundi.jpeg" alt="Farmamundi" className="h-5 w-auto object-contain" /></a>
+        <div className="lg:hidden fixed top-[80px] left-0 w-full h-[calc(100dvh-80px)] bg-slate-50 border-t border-slate-200 z-40 flex flex-col justify-between overflow-y-auto">
+          
+          {/* Links Section */}
+          <div className="px-4 py-6 flex flex-col gap-2">
+            {(!user || (user.role !== 'therapist' && user.role !== 'admin')) ? (
+              <>
+                <Link to="/" className={getMobileNavLinkClass('/')}>Home</Link>
+                <Link to="/about" className={getMobileNavLinkClass('/about')}>About</Link>
+                <Link to="/resources" className={getMobileNavLinkClass('/resources')}>Resources</Link>
+                <Link to="/therapists" className={getMobileNavLinkClass('/therapists')}>Therapists</Link>
+                {user && <Link to={getDashboardPath()} className={getMobileNavLinkClass(getDashboardPath())}>Dashboard</Link>}
+                
+                {/* Mobile specific sign-in button if not logged in */}
+                {!user && !isAuthPage && (
+                  <div className="mt-4 pt-4 border-t border-slate-200">
+                    <Button onClick={() => navigate('/auth')} className="w-full h-12 text-[15px] font-bold bg-[#0F766E] hover:bg-[#115E59] text-white rounded-xl shadow-sm">
+                      Sign In
+                    </Button>
+                  </div>
+                )}
+              </>
+            ) : (
+              <Link to={getDashboardPath()} className={getMobileNavLinkClass(getDashboardPath())}>Workspace Dashboard</Link>
+            )}
+          </div>
+          
+          {/* Mobile Sponsors at the Absolute Bottom */}
+          <div className="mt-auto bg-white border-t border-slate-200 px-4 py-8 flex flex-col items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.02)]">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 text-center">Institutional Partners</span>
+            <div className="flex items-center justify-center gap-6 sm:gap-8 flex-wrap">
+              <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer">
+                <img src="/catalonia.png" alt="Catalonia" className="h-6 sm:h-7 w-auto object-contain grayscale opacity-60" />
+              </a>
+              <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer">
+                <img src="/aha.png" alt="AHA" className="h-5 sm:h-6 w-auto object-contain grayscale opacity-60" />
+              </a>
+              <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer">
+                <img src="/famamundi.jpeg" alt="Farmamundi" className="h-5 sm:h-6 w-auto object-contain grayscale opacity-60" />
+              </a>
+            </div>
           </div>
         </div>
       )}
