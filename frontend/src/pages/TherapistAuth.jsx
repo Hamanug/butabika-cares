@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, FileText, Shield, Video, Eye, EyeOff } from 'lucide-react';
 
 export default function TherapistAuth() {
@@ -64,17 +64,17 @@ export default function TherapistAuth() {
       
       {/* Left Side: Secure Login Form */}
       <div className="w-full lg:w-1/2 flex flex-col items-center bg-white px-6 sm:px-12 min-h-screen lg:min-h-0 relative">
-        <div className="w-full max-w-md flex flex-col pt-12 lg:pt-16 pb-10">
+        <div className="w-full max-w-md flex flex-col pt-8 lg:pt-12 pb-10">
           
           {/* Centered Header Section */}
           <div className="mb-8 text-center flex flex-col items-center">
-            <img src="/butabika.png" alt="Butabika Logo" className="h-28 md:h-36 w-auto mb-6 object-contain" />
-            <div className="bg-teal-50 text-[#0F766E] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mb-4 mt-2 inline-block">SECURE CLINICAL PORTAL</div>
+            <img src="/butabika.png" alt="Butabika Logo" className="h-28 md:h-36 w-auto mb-2 object-contain" />
+            <div className="bg-teal-50 text-[#0F766E] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mt-2 mb-2 inline-block">SECURE CLINICAL PORTAL</div>
             <h1 className="text-3xl font-black tracking-tight">
-              {step === 'login' && <><span className="text-[#0F766E]">Staff</span> <span className="text-slate-800">Login</span></>}
-              {step === 'forgot' && <><span className="text-[#0F766E]">Account</span> <span className="text-slate-800">Recovery</span></>}
-              {step === 'verify' && <><span className="text-[#0F766E]">Security</span> <span className="text-slate-800">Code</span></>}
-              {step === 'reset' && <><span className="text-[#0F766E]">New</span> <span className="text-slate-800">Password</span></>}
+              {step === 'login' && <><span className="text-[#0F766E]">Staff</span> <span className="text-slate-600">Login</span></>}
+              {step === 'forgot' && <><span className="text-[#0F766E]">Account</span> <span className="text-slate-600">Recovery</span></>}
+              {step === 'verify' && <><span className="text-[#0F766E]">Security</span> <span className="text-slate-600">Code</span></>}
+              {step === 'reset' && <><span className="text-[#0F766E]">New</span> <span className="text-slate-600">Password</span></>}
             </h1>
             <p className="text-sm text-slate-500 mt-2 mb-8 font-medium">
               {step === 'login' && 'Secure access for authorized Butabika staff.'}
@@ -88,13 +88,13 @@ export default function TherapistAuth() {
           {step === 'login' && (
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2">Email or Phone Number</label>
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                <label className="block text-sm font-bold text-slate-700 mb-2">Email or Phone Number</label>
+                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
               </div>
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2">Password</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] transition-colors focus:outline-none" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -112,8 +112,8 @@ export default function TherapistAuth() {
           {step === 'forgot' && (
             <form onSubmit={handleForgotSend} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2">Registered Email or Phone</label>
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                <label className="block text-sm font-bold text-slate-700 mb-2">Registered Email or Phone</label>
+                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
               </div>
               <button type="submit" disabled={loading} className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center uppercase tracking-widest">
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Send Recovery Code'}
@@ -127,8 +127,8 @@ export default function TherapistAuth() {
           {step === 'verify' && (
             <form onSubmit={(e) => { e.preventDefault(); if (otp.length === 6) setStep('reset'); else setError('Enter a 6-digit code'); }} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2">6-Digit Code</label>
-                <input type="text" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} className="w-full h-12 rounded-lg border border-slate-300 px-4 text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required autoFocus />
+                <label className="block text-sm font-bold text-slate-700 mb-2">6-Digit Code</label>
+                <input type="text" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} className="w-full h-12 rounded-lg border border-slate-300 px-4 text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required autoFocus />
               </div>
               <button type="submit" className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors uppercase tracking-widest">Verify Code</button>
               <button type="button" onClick={() => setStep('forgot')} className="w-full text-sm text-slate-500 flex items-center justify-center mt-4 font-bold hover:text-[#0F766E] transition-colors">
@@ -140,9 +140,9 @@ export default function TherapistAuth() {
           {step === 'reset' && (
             <form onSubmit={handleReset} className="space-y-5">
               <div>
-                <label className="block text-xs font-bold uppercase tracking-widest text-slate-700 mb-2">New Password</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">New Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-2 focus:ring-[#0F766E] focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] transition-colors focus:outline-none" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -156,25 +156,15 @@ export default function TherapistAuth() {
 
         </div>
 
-        {/* Absolute Bottom Copyright & Disclaimer Area */}
-        <div className="w-full mt-auto pb-6">
-          <div className="max-w-md mx-auto text-center border-t border-slate-100 pt-8 mb-6">
-            <p className="text-xs text-slate-500 font-medium">Are you a patient? This portal is restricted to authorized Butabika Hospital personnel.</p>
-            <Link to="/auth" className="text-xs font-bold text-[#0F766E] hover:underline transition-colors mt-2 block">
-              Return to Patient Portal
-            </Link>
-          </div>
-          
-          <div className="w-full text-center">
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest">
-              COPYRIGHT © 2026 BUTABIKA NATIONAL REFERRAL MENTAL HOSPITAL. ALL RIGHTS RESERVED.
-            </p>
-          </div>
+        {/* Patient Safety Redirect */}
+        <div className="w-full mt-auto pb-8 text-center">
+          <p className="text-xs text-slate-500 mb-1">Are you a patient? This portal is restricted to authorized personnel.</p>
+          <a href="/auth" className="text-xs font-bold text-[#0F766E] hover:underline transition-all">Return to Patient Portal</a>
         </div>
       </div>
 
       {/* Right Side: The Clinical Gateway */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 to-[#0F766E] relative justify-center items-start pt-12 lg:pt-32 px-12 pb-12 overflow-hidden">
+      <div className="hidden lg:flex flex-col lg:w-1/2 bg-gradient-to-br from-slate-900 to-[#0F766E] relative justify-center items-center pt-12 lg:pt-16 px-12 pb-12 overflow-hidden">
         
         {/* Massive Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-5">
@@ -183,11 +173,11 @@ export default function TherapistAuth() {
 
         {/* Frosted Glass Information Card */}
         <div className="bg-slate-900/80 backdrop-blur-md border border-slate-700 rounded-2xl p-10 max-w-lg w-full relative z-10 shadow-2xl">
-          <h2 className="text-2xl lg:text-3xl font-black text-white leading-tight mb-4">
-            Advanced Clinical Workspace.<br/><span className="text-emerald-400">Zero-Trust Security.</span>
+          <h2 className="text-2xl lg:text-3xl font-black text-teal-400 leading-snug mb-4">
+            Secure Clinical Access.
           </h2>
           <p className="text-slate-200 text-sm font-medium mb-8 leading-relaxed">
-            Engineered for Butabika National Referral Mental Hospital staff. Access your secure EMR tools, manage caseloads, and conduct encrypted telehealth sessions.
+            A dedicated workspace for Butabika National Referral Mental Hospital personnel to manage patient care, clinical records, and private consultations safely.
           </p>
 
           <div className="space-y-6">
@@ -196,9 +186,9 @@ export default function TherapistAuth() {
                 <FileText className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Integrated EMR System</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">SECURE PATIENT CHARTS</h3>
                 <p className="text-sm text-slate-200 font-medium leading-relaxed">
-                  Access secure patient charts and longitudinal clinical data.
+                  Review and update longitudinal clinical records with absolute privacy.
                 </p>
               </div>
             </div>
@@ -208,9 +198,9 @@ export default function TherapistAuth() {
                 <Shield className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">RBAC Compliance</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">STRICT ACCESS CONTROLS</h3>
                 <p className="text-sm text-slate-200 font-medium leading-relaxed">
-                  Your session is governed by strict Role-Based Access Control and zero-trust architecture.
+                  Patient data is strictly compartmentalized based on your verified clinical role.
                 </p>
               </div>
             </div>
@@ -220,13 +210,20 @@ export default function TherapistAuth() {
                 <Video className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
-                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">Encrypted Telehealth</h3>
+                <h3 className="text-[10px] font-bold uppercase tracking-widest text-slate-400 mb-1">PRIVATE TELEHEALTH</h3>
                 <p className="text-sm text-slate-200 font-medium leading-relaxed">
-                  Conduct high-fidelity, E2EE virtual sessions natively within the platform.
+                  Conduct high-fidelity virtual care in a strictly confidential environment.
                 </p>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Right Footer Placement */}
+        <div className="mt-6 text-center w-full max-w-md mx-auto">
+          <a href="https://www.butabikahospital.go.ug/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-emerald-400 uppercase tracking-widest opacity-80 transition-colors duration-300 inline-block">
+            © 2026 Butabika National Referral Mental Hospital
+          </a>
         </div>
       </div>
       

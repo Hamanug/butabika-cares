@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { Button } from '../components/ui/Button';
 import { Input } from '../components/ui/Input';
-import { Eye, EyeOff, ArrowLeft, ShieldCheck, Activity, Video, Lock, Globe } from 'lucide-react';
+import { Eye, EyeOff, ArrowLeft, ShieldCheck, Activity, Globe } from 'lucide-react';
 
 const calculateAge = (dobString) => {
   const birthDate = new Date(dobString);
@@ -224,26 +224,25 @@ const Auth = () => {
 
         <div className="relative z-10 mx-auto w-full max-w-sm animate-fade-in-up">
           
-          {/* Centered Logo & Headers */}
+          {/* Centered Logo & Headers (Strictly Synchronized with Therapist Portal) */}
           <div className="mb-10 flex flex-col items-center text-center">
             <Link to="/" className="mb-6 hover:opacity-80 transition-opacity flex flex-col items-center">
-              {/* Mobile: Official Crest */}
-              <img src="/butabika.png" alt="Butabika Hospital" className="h-16 w-auto object-contain drop-shadow-sm lg:hidden mb-2" />
-              
-              {/* Desktop: Premium Eyebrow Text */}
-              <span className="hidden lg:block font-heading text-xs md:text-sm font-black text-[#0F766E]/70 uppercase tracking-[0.25em] drop-shadow-sm">
-                Butabika Cares
-              </span>
+              <img src="/butabika.png" alt="Butabika Hospital" className="h-28 md:h-36 w-auto mb-2 object-contain" />
             </Link>
             
-            {/* Main Header shifted to Slate to prevent color clashing */}
-            <h1 className="font-heading text-3xl md:text-4xl font-bold tracking-tight text-slate-900">
-              {step === 'form' && (isSignUp ? 'Create Account' : 'Welcome Back')}
-              {step === 'confirm' && 'Confirm Number'}
-              {step === 'verify' && 'Verify Number'}
-              {step === 'forgot_phone' && 'Account Recovery'}
-              {step === 'forgot_verify' && 'Verify Recovery Code'}
-              {step === 'forgot_reset' && 'Create New Password'}
+            {/* Security Badge */}
+            <div className="bg-teal-50 text-[#0F766E] text-xs font-black uppercase tracking-[0.2em] px-4 py-1.5 rounded-full mt-2 mb-2 inline-block">
+              SECURE PATIENT PORTAL
+            </div>
+            
+            {/* Two-Tone Header */}
+            <h1 className="text-3xl md:text-4xl font-black tracking-tight mt-2">
+              {step === 'form' && (isSignUp ? <><span className="text-[#0F766E]">Create</span> <span className="text-slate-600">Account</span></> : <><span className="text-[#0F766E]">Welcome</span> <span className="text-slate-600">Back</span></>)}
+              {step === 'confirm' && <><span className="text-[#0F766E]">Confirm</span> <span className="text-slate-600">Number</span></>}
+              {step === 'verify' && <><span className="text-[#0F766E]">Verify</span> <span className="text-slate-600">Number</span></>}
+              {step === 'forgot_phone' && <><span className="text-[#0F766E]">Account</span> <span className="text-slate-600">Recovery</span></>}
+              {step === 'forgot_verify' && <><span className="text-[#0F766E]">Verify</span> <span className="text-slate-600">Code</span></>}
+              {step === 'forgot_reset' && <><span className="text-[#0F766E]">New</span> <span className="text-slate-600">Password</span></>}
             </h1>
             <p className="mt-3 text-sm md:text-base font-medium text-slate-500">
               {step === 'form' && (isSignUp ? 'Begin your mental health journey securely.' : 'Please enter your details to sign in.')}
@@ -276,7 +275,7 @@ const Auth = () => {
                     placeholder="e.g., 0712345678" 
                     value={phoneNumber} 
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s]/g, ''))} 
-                    className="h-12 text-base shadow-sm border-slate-200 focus-visible:border-[#0F766E] bg-slate-50/50"
+                    className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
                     required 
                   />
                 </div>
@@ -288,7 +287,7 @@ const Auth = () => {
                       type={showPassword ? "text" : "password"} 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="h-12 text-base pr-12 border-slate-200 focus-visible:border-[#0F766E] bg-slate-50/50"
+                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                     <button 
@@ -315,7 +314,7 @@ const Auth = () => {
                       type="date" 
                       value={dateOfBirth} 
                       onChange={(e) => setDateOfBirth(e.target.value)} 
-                      className="h-12 text-base shadow-sm border-slate-200 focus-visible:border-[#0F766E] bg-slate-50/50"
+                      className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                   </div>
@@ -338,16 +337,37 @@ const Auth = () => {
 
             {/* Step: Confirm */}
             {step === 'confirm' && (
-              <div className="space-y-6">
-                <div className="rounded-xl bg-slate-50 p-6 text-center border border-slate-200 shadow-inner">
-                  <p className="text-sm font-medium text-slate-500 mb-2">Registering with number:</p>
-                  <p className="text-3xl font-bold tracking-wide text-slate-900">{formattedPhone}</p>
+              <div className="space-y-6 animate-fade-in-up">
+                {/* Outer Container */}
+                <div className="flex flex-col items-center rounded-xl bg-slate-50 p-6 sm:p-8 border border-slate-200 shadow-inner w-full">
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 text-center w-full">Registering with number</p>
+                  
+                  {/* Premium Number Token */}
+                  <div className="inline-flex items-center justify-center bg-white border border-[#0F766E]/30 rounded-xl px-4 sm:px-8 py-3 shadow-sm ring-4 ring-[#0F766E]/5 max-w-full overflow-hidden">
+                    {/* Negative right margin offsets trailing letter-spacing to ensure absolute center */}
+                    <span className="text-2xl sm:text-3xl md:text-4xl font-mono font-black tracking-[0.15em] text-[#0F766E] -mr-[0.15em]">
+                      {formattedPhone}
+                    </span>
+                  </div>
                 </div>
+                
+                {/* Action Buttons (Corrected Hierarchy) */}
                 <div className="flex gap-4">
-                  <Button variant="outline" type="button" onClick={() => setStep('form')} className="flex-1 h-12 font-semibold border-slate-200 hover:bg-slate-50">Edit</Button>
-                  <Button type="button" onClick={handleSendOtp} disabled={loading} className="flex-1 h-12 font-semibold shadow-md bg-[#0F766E] hover:bg-[#115E59]">
-                    {loading ? 'Sending...' : 'Confirm'}
-                  </Button>
+                  <button 
+                    type="button" 
+                    onClick={() => setStep('form')} 
+                    className="flex-1 h-12 rounded-lg font-bold text-slate-600 bg-slate-200/70 hover:bg-slate-300 hover:text-slate-900 transition-colors"
+                  >
+                    Edit Number
+                  </button>
+                  <button 
+                    type="button" 
+                    onClick={handleSendOtp} 
+                    disabled={loading} 
+                    className="flex-1 h-12 rounded-lg font-bold shadow-md bg-[#0F766E] hover:bg-[#115E59] text-white transition-colors disabled:opacity-50 flex items-center justify-center"
+                  >
+                    {loading ? 'Sending...' : 'Confirm & Proceed'}
+                  </button>
                 </div>
               </div>
             )}
@@ -355,9 +375,17 @@ const Auth = () => {
             {/* Step: Verify */}
             {(step === 'verify' || step === 'forgot_verify') && (
               <form onSubmit={step === 'verify' ? handleVerifyOtp : handleForgotVerifySubmit} className="space-y-8">
-                <div className="rounded-xl bg-slate-50 p-6 text-center border border-slate-200 shadow-inner">
-                  <p className="text-sm font-medium text-slate-500 mb-2">6-digit code sent to:</p>
-                  <p className="text-xl font-bold tracking-wide text-slate-900">{formattedPhone}</p>
+                {/* Outer Container (Synchronized Token Styling) */}
+                <div className="flex flex-col items-center rounded-xl bg-slate-50 p-6 sm:p-8 border border-slate-200 shadow-inner w-full mb-6">
+                  <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4 text-center w-full">6-Digit Code Sent To</p>
+                  
+                  {/* Premium Number Token */}
+                  <div className="inline-flex items-center justify-center bg-white border border-[#0F766E]/30 rounded-xl px-4 sm:px-8 py-3 shadow-sm ring-4 ring-[#0F766E]/5 max-w-full overflow-hidden">
+                    {/* Negative right margin offsets trailing letter-spacing to ensure absolute center */}
+                    <span className="text-2xl sm:text-3xl md:text-4xl font-mono font-black tracking-[0.15em] text-[#0F766E] -mr-[0.15em]">
+                      {formattedPhone}
+                    </span>
+                  </div>
                 </div>
                 <div>
                   <Input 
@@ -366,7 +394,7 @@ const Auth = () => {
                     placeholder="• • • • • •" 
                     value={otp} 
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
-                    className="text-center text-3xl tracking-[0.5em] font-mono h-16 shadow-inner bg-slate-50/50 border-slate-200 focus-visible:border-[#0F766E]" 
+                    className="text-center text-3xl tracking-[0.5em] font-mono h-16 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200" 
                     autoFocus 
                   />
                 </div>
@@ -389,7 +417,7 @@ const Auth = () => {
                     placeholder="e.g., 0712345678" 
                     value={phoneNumber} 
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s]/g, ''))} 
-                    className="h-12 text-base shadow-sm border-slate-200 focus-visible:border-[#0F766E] bg-slate-50/50"
+                    className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
                     required 
                   />
                 </div>
@@ -412,7 +440,7 @@ const Auth = () => {
                       type={showPassword ? "text" : "password"} 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="h-12 text-base pr-12 border-slate-200 focus-visible:border-[#0F766E] bg-slate-50/50"
+                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                     <button 
@@ -433,9 +461,14 @@ const Auth = () => {
 
           {/* Mobile Branding & Legal Footer */}
           <div className="mt-12 flex flex-col items-center justify-center space-y-3 border-t border-slate-200/60 pt-6 pb-8 lg:pb-0 animate-fade-in-up">
-            <p className="lg:hidden text-xs font-medium text-slate-400 text-center tracking-wide">
+            <a 
+              href="https://www.butabikahospital.go.ug" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="lg:hidden text-xs font-medium text-slate-400 text-center tracking-wide hover:text-[#0F766E] transition-colors"
+            >
               © {new Date().getFullYear()} Butabika National Referral Mental Hospital
-            </p>
+            </a>
             <div className="flex gap-6 text-xs font-bold text-[#155E75]">
               <Link to="/privacy" className="hover:text-[#0F766E] hover:underline underline-offset-4 transition-colors">Privacy Policy</Link>
               <Link to="/terms" className="hover:text-[#0F766E] hover:underline underline-offset-4 transition-colors">Terms of Service</Link>
@@ -507,9 +540,11 @@ const Auth = () => {
 
         </div>
 
-        {/* Footer subtle text for right side */}
-        <div className="relative z-10 pb-8 text-center">
-          <p className="text-sm text-slate-400/80 font-medium tracking-wide">© {new Date().getFullYear()} Butabika National Referral Mental Hospital</p>
+        {/* Footer subtle active link for right side (Synchronized with Staff Portal) */}
+        <div className="mt-6 text-center w-full max-w-md mx-auto pb-8 z-10 relative">
+          <a href="https://www.butabikahospital.go.ug/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-teal-400 uppercase tracking-widest opacity-80 transition-colors duration-300 inline-block">
+            © {new Date().getFullYear()} Butabika National Referral Mental Hospital
+          </a>
         </div>
       </div>
     </div>
