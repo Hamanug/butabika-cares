@@ -24,6 +24,12 @@ export default function TherapistAuth() {
     setError(''); setLoading(true);
     try {
       const res = await axios.post('/api/auth/therapist/login', { identifier: identifier.trim(), password: password.trim() });
+      if (res.data.requireReset) {
+        setOtp(password); // Temporarily store the temp password to send to the reset endpoint
+        setPassword(''); // Clear the password field for the new input
+        setStep('reset');
+        return;
+      }
       login(res.data.user);
       navigate('/therapist/dashboard');
     } catch (err) {
@@ -31,31 +37,18 @@ export default function TherapistAuth() {
     } finally { setLoading(false); }
   };
 
-  const handleForgotSend = async (e) => {
+  const handleInitialPasswordSet = async (e) => {
     e.preventDefault();
+    if (password.trim().length < 8) return setError('New password must be at least 8 characters.');
     setError(''); setLoading(true);
     try {
-      await axios.post('/api/auth/therapist/forgot-password-otp', { identifier: identifier.trim() });
-      setStep('verify');
-      setSuccessMessage('A recovery code has been sent to your registered contact.');
-    } catch (err) {
-      setError(err.response?.data?.error || 'Failed to locate account.');
-    } finally { setLoading(false); }
-  };
-
-  const handleReset = async (e) => {
-    e.preventDefault();
-    if (password.trim().length < 8) return setError('Password must be at least 8 characters.');
-    setError(''); setLoading(true);
-    try {
-      await axios.post('/api/auth/therapist/reset-password', { 
-        identifier: identifier.trim(), otp_code: otp.trim(), new_password: password.trim() 
+      const res = await axios.post('/api/auth/therapist/set-initial-password', { 
+        identifier: identifier.trim(), temporary_password: otp, new_password: password.trim() 
       });
-      setStep('login');
-      setPassword(''); setOtp('');
-      setSuccessMessage('Password reset successfully! Please sign in.');
+      login(res.data.user);
+      navigate('/therapist/dashboard');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to reset password.');
+      setError(err.response?.data?.error || 'Failed to update password.');
     } finally { setLoading(false); }
   };
 
@@ -110,46 +103,38 @@ export default function TherapistAuth() {
           )}
 
           {step === 'forgot' && (
-            <form onSubmit={handleForgotSend} className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">Registered Email or Phone</label>
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+            <div className="space-y-6 text-center animate-fade-in-up">
+              <div className="bg-red-50 border border-red-200 rounded-xl p-6 shadow-sm">
+                <Shield className="h-12 w-12 text-red-600 mx-auto mb-4" />
+                <h3 className="text-sm font-black text-red-700 mb-2 uppercase tracking-widest">IT Authorization Required</h3>
+                <p className="text-sm text-red-600 font-semibold leading-relaxed">
+                  For security and compliance purposes, clinical staff cannot self-reset passwords. 
+                  <br/><br/>
+                  Please contact the Butabika IT Administration Desk at <span className="font-black text-red-800">Internal Ext. 400</span> to receive a temporary access credential.
+                </p>
               </div>
-              <button type="submit" disabled={loading} className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center uppercase tracking-widest">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Send Recovery Code'}
-              </button>
-              <button type="button" onClick={() => setStep('login')} className="w-full text-sm text-slate-500 flex items-center justify-center mt-4 font-bold hover:text-[#0F766E] transition-colors">
+              <button type="button" onClick={() => setStep('login')} className="w-full text-sm text-slate-500 flex items-center justify-center font-bold hover:text-[#0F766E] transition-colors">
                 <ArrowLeft className="h-4 w-4 mr-1.5" /> Return to Login
               </button>
-            </form>
-          )}
-
-          {step === 'verify' && (
-            <form onSubmit={(e) => { e.preventDefault(); if (otp.length === 6) setStep('reset'); else setError('Enter a 6-digit code'); }} className="space-y-5">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">6-Digit Code</label>
-                <input type="text" maxLength={6} value={otp} onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} className="w-full h-12 rounded-lg border border-slate-300 px-4 text-center text-2xl tracking-[0.5em] font-mono focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required autoFocus />
-              </div>
-              <button type="submit" className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors uppercase tracking-widest">Verify Code</button>
-              <button type="button" onClick={() => setStep('forgot')} className="w-full text-sm text-slate-500 flex items-center justify-center mt-4 font-bold hover:text-[#0F766E] transition-colors">
-                <ArrowLeft className="h-4 w-4 mr-1.5" /> Back
-              </button>
-            </form>
+            </div>
           )}
 
           {step === 'reset' && (
-            <form onSubmit={handleReset} className="space-y-5">
+            <form onSubmit={handleInitialPasswordSet} className="space-y-5 animate-fade-in-up">
+              <div className="bg-teal-50 border border-teal-200 rounded-lg p-4 mb-4 text-sm text-[#0F766E] font-medium">
+                Welcome. For your security, you must replace your temporary IT-issued credential with a permanent private password.
+              </div>
               <div>
-                <label className="block text-sm font-bold text-slate-700 mb-2">New Password</label>
+                <label className="block text-sm font-bold text-slate-700 mb-2">Create Permanent Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
-                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] transition-colors focus:outline-none" aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Minimum 8 characters" className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] focus:outline-none">
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
                 </div>
               </div>
               <button type="submit" disabled={loading} className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center uppercase tracking-widest">
-                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Set New Password'}
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Secure & Continue'}
               </button>
             </form>
           )}

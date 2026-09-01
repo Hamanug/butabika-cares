@@ -111,8 +111,8 @@ const Navbar = () => {
 
   const getNavLinkClass = (path) => {
     return location.pathname === path
-      ? "px-4 py-2 text-[15px] font-bold text-[#0F766E] bg-teal-50/80 rounded-full transition-all duration-200 whitespace-nowrap"
-      : "px-4 py-2 text-[15px] font-medium text-slate-500 hover:text-[#0F766E] hover:bg-slate-50 rounded-full transition-all duration-200 whitespace-nowrap";
+      ? "px-4 py-2 text-[15px] font-bold text-[#0F766E] bg-teal-50 rounded-full transition-all duration-300 ease-out whitespace-nowrap"
+      : "px-4 py-2 text-[15px] font-semibold text-slate-500 hover:text-[#0F766E] hover:bg-teal-50/50 rounded-full transition-all duration-300 ease-out whitespace-nowrap";
   };
 
   const getMobileNavLinkClass = (path) => {
@@ -122,7 +122,7 @@ const Navbar = () => {
   };
 
   return (
-    <header className="bg-white/95 backdrop-blur-md border-b border-slate-200 fixed w-full top-0 z-50 transition-all duration-300 shadow-sm">
+    <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 fixed w-full top-0 z-50 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
       <nav className="flex items-center justify-between w-full h-20 gap-2 sm:gap-4 max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8">
         
         {/* Left Zone: Brand & Nav Links */}
@@ -180,7 +180,7 @@ const Navbar = () => {
           ) : (
             <>
               {!user && !isAuthPage && (
-                <Button onClick={() => navigate('/auth')} size="sm" className="hidden sm:flex rounded-full px-6 py-5 shadow-sm bg-[#0F766E] hover:bg-[#115E59] text-[15px] font-bold text-white flex-shrink-0">
+                <Button onClick={() => navigate('/auth')} size="sm" className="hidden sm:flex rounded-full px-6 py-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 bg-[#0F766E] hover:bg-[#0D655E] text-[15px] font-bold text-white flex-shrink-0">
                   Sign In
                 </Button>
               )}

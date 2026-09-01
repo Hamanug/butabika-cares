@@ -33,12 +33,12 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   const formatPhoneClient = (rawPhone) => {
-    let cleaned = rawPhone.replace(/[^\d+]/g, '');
-    if (cleaned.startsWith('+256')) return cleaned.slice(1);
-    if (cleaned.startsWith('07')) return '256' + cleaned.slice(1);
-    if (cleaned.startsWith('7')) return '256' + cleaned;
-    if (cleaned.startsWith('256')) return cleaned;
-    return cleaned.replace(/\+/g, '');
+    if (!rawPhone) return null;
+    const digits = rawPhone.replace(/\D/g, '');
+    if (digits.length === 9 && digits.startsWith('7')) return '256' + digits;
+    if (digits.length === 10 && digits.startsWith('07')) return '256' + digits.slice(1);
+    if (digits.length === 12 && digits.startsWith('2567')) return digits;
+    return null;
   };
   const formattedPhone = formatPhoneClient(phoneNumber);
 
@@ -92,7 +92,7 @@ const Auth = () => {
     e.preventDefault();
     setError('');
     setSuccessMessage('');
-    if (!phoneNumber) return setError('Please enter a valid phone number');
+    if (!phoneNumber || !formattedPhone) return setError('Please enter a valid 9 or 10-digit Ugandan phone number');
     setLoading(true);
     if (!isSignUp) {
       try {
@@ -139,7 +139,17 @@ const Auth = () => {
       await axios.post('/api/auth/patient/send-otp', { phone_number: formattedPhone, date_of_birth: dateOfBirth });
       setStep('verify');
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to send verification code.');
+      if (err.response?.status === 409) {
+        setError(err.response.data.error);
+        // Automatically switch to the Sign In tab after 3 seconds
+        setTimeout(() => {
+          setIsSignUp(false);
+          setStep('form');
+          setError('');
+        }, 3000);
+      } else {
+        setError(err.response?.data?.error || 'Failed to send verification code.');
+      }
     } finally { setLoading(false); }
   };
 
