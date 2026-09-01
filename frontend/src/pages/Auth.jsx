@@ -275,19 +275,19 @@ const Auth = () => {
                     placeholder="e.g., 0712345678" 
                     value={phoneNumber} 
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s]/g, ''))} 
-                    className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
+                    className="h-12 text-base bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
                     required 
                   />
                 </div>
                 
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-[#155E75]">Password</label>
-                  <div className="relative shadow-sm rounded-md">
+                  <div className="relative rounded-md">
                     <Input 
                       type={showPassword ? "text" : "password"} 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
+                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                     <button 
@@ -314,7 +314,7 @@ const Auth = () => {
                       type="date" 
                       value={dateOfBirth} 
                       onChange={(e) => setDateOfBirth(e.target.value)} 
-                      className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
+                      className="h-12 text-base bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                   </div>
@@ -394,7 +394,7 @@ const Auth = () => {
                     placeholder="• • • • • •" 
                     value={otp} 
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} 
-                    className="text-center text-3xl tracking-[0.5em] font-mono h-16 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200" 
+                    className="text-center text-3xl tracking-[0.5em] font-mono h-16 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200" 
                     autoFocus 
                   />
                 </div>
@@ -417,7 +417,7 @@ const Auth = () => {
                     placeholder="e.g., 0712345678" 
                     value={phoneNumber} 
                     onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9+\s]/g, ''))} 
-                    className="h-12 text-base shadow-sm bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
+                    className="h-12 text-base bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
                     required 
                   />
                 </div>
@@ -435,12 +435,12 @@ const Auth = () => {
               <form onSubmit={handleForgotResetSubmit} className="space-y-6">
                 <div className="space-y-2">
                   <label className="block text-sm font-bold text-[#155E75]">New Password</label>
-                  <div className="relative shadow-sm rounded-md">
+                  <div className="relative rounded-md">
                     <Input 
                       type={showPassword ? "text" : "password"} 
                       value={password} 
                       onChange={(e) => setPassword(e.target.value)} 
-                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:border-[#0F766E] transition-colors duration-200"
+                      className="h-12 text-base pr-12 bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
                       required 
                     />
                     <button 
@@ -467,7 +467,7 @@ const Auth = () => {
               rel="noopener noreferrer"
               className="lg:hidden text-xs font-medium text-slate-400 text-center tracking-wide hover:text-[#0F766E] transition-colors"
             >
-              © {new Date().getFullYear()} Butabika National Referral Mental Hospital
+              &copy; {new Date().getFullYear()} Butabika National Referral Mental Hospital
             </a>
             <div className="flex gap-6 text-xs font-bold text-[#155E75]">
               <Link to="/privacy" className="hover:text-[#0F766E] hover:underline underline-offset-4 transition-colors">Privacy Policy</Link>
@@ -478,7 +478,7 @@ const Auth = () => {
       </div>
 
       {/* Right Column: Premium Hospital Branding Visual */}
-      <div className="relative hidden w-1/2 lg:flex flex-col overflow-hidden bg-gradient-to-br from-[#0F766E] via-[#0369A1] to-[#0F172A]">
+      <div className="relative hidden w-1/2 lg:flex flex-col justify-center overflow-hidden bg-gradient-to-br from-[#0F766E] via-[#0369A1] to-[#0F172A]">
         
         {/* Animated ambient mesh gradients */}
         <div className="absolute top-0 left-0 h-full w-full bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10 mix-blend-overlay"></div>
@@ -495,7 +495,7 @@ const Auth = () => {
         </div>
 
         {/* Main Graphic Centerpiece (Perfectly Centered) */}
-        <div className="relative z-10 flex flex-1 flex-col items-center justify-center p-12">
+        <div className="relative z-10 flex flex-col items-center justify-center px-12">
           
           <div className="text-left w-full max-w-xl bg-slate-900/40 p-10 rounded-2xl backdrop-blur-md border border-white/10 shadow-2xl animate-fade-in-up">
             <h2 className="font-heading text-3xl font-bold text-white mb-4 drop-shadow-md leading-tight">
@@ -541,9 +541,9 @@ const Auth = () => {
         </div>
 
         {/* Footer subtle active link for right side (Synchronized with Staff Portal) */}
-        <div className="mt-6 text-center w-full max-w-md mx-auto pb-8 z-10 relative">
+        <div className="mt-6 text-center w-full max-w-md mx-auto z-10 relative">
           <a href="https://www.butabikahospital.go.ug/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-teal-400 uppercase tracking-widest opacity-80 transition-colors duration-300 inline-block">
-            © {new Date().getFullYear()} Butabika National Referral Mental Hospital
+            &copy; {new Date().getFullYear()} Butabika National Referral Mental Hospital
           </a>
         </div>
       </div>

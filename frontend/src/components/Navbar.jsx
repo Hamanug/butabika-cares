@@ -130,7 +130,7 @@ const Navbar = () => {
           <Link to={getLogoPath()} className="flex items-center gap-2 sm:gap-3 group">
             <img src="/butabika.png" alt="Butabika Logo" className="h-9 sm:h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" />
             <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tight hidden md:block">
-              <span className="text-slate-900">Butabika</span> <span className="text-[#0F766E]">Cares</span>
+              <span className="text-[#0F766E]">Butabika</span> <span className="text-slate-600">Cares</span>
             </span>
           </Link>
           

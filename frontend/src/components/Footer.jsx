@@ -70,15 +70,19 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar: Clinical & Minimalist */}
-        <div className="flex flex-col md:flex-row items-center justify-between pt-8 border-t border-border gap-4">
-          <p className="text-sm font-medium text-slate-500">
+        {/* Bottom Bar: Clinical & Centered */}
+        <div className="flex flex-col items-center justify-center pt-10 border-t border-border gap-5 text-center">
+          <p className="text-base font-semibold text-slate-600">
             &copy; {currentYear} Butabika National Referral Mental Hospital
           </p>
           
-          <div className="flex items-center gap-6 text-sm font-semibold text-slate-500">
-            <Link className="hover:text-primary transition-colors" to="/privacy">Privacy Policy</Link>
-            <Link className="hover:text-primary transition-colors" to="/terms">Terms of Service</Link>
+          <div className="flex items-center justify-center gap-6 text-sm font-bold text-slate-500">
+            <Link className="hover:text-[#0F766E] transition-colors" to="/privacy">Privacy Policy</Link>
+            <Link className="hover:text-[#0F766E] transition-colors" to="/terms">Terms of Service</Link>
+          </div>
+
+          <div className="mt-2 text-xs font-medium text-slate-400 tracking-wide">
+            Powered by Elixir PHC and <span className="font-bold text-slate-500">Feyn Systems</span>
           </div>
         </div>
       </div>

@@ -89,12 +89,12 @@ export default function TherapistAuth() {
             <form onSubmit={handleLogin} className="space-y-5">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Email or Phone Number</label>
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] transition-colors focus:outline-none" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -113,7 +113,7 @@ export default function TherapistAuth() {
             <form onSubmit={handleForgotSend} className="space-y-5">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">Registered Email or Phone</label>
-                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                <input type="text" value={identifier} onChange={(e) => setIdentifier(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 px-4 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
               </div>
               <button type="submit" disabled={loading} className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white h-12 rounded-full text-sm font-bold shadow-sm transition-colors disabled:opacity-50 flex justify-center items-center uppercase tracking-widest">
                 {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : 'Send Recovery Code'}
@@ -142,7 +142,7 @@ export default function TherapistAuth() {
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-2">New Password</label>
                 <div className="relative">
-                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
+                  <input type={showPassword ? 'text' : 'password'} value={password} onChange={(e) => setPassword(e.target.value)} className="w-full h-12 rounded-lg border border-slate-300 pl-4 pr-12 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] bg-white text-slate-900 font-medium transition-colors" required />
                   <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#0F766E] transition-colors focus:outline-none" aria-label={showPassword ? 'Hide password' : 'Show password'}>
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -156,10 +156,23 @@ export default function TherapistAuth() {
 
         </div>
 
-        {/* Patient Safety Redirect */}
-        <div className="w-full mt-auto pb-8 text-center">
-          <p className="text-xs text-slate-500 mb-1">Are you a patient? This portal is restricted to authorized personnel.</p>
-          <a href="/auth" className="text-xs font-bold text-[#0F766E] hover:underline transition-all">Return to Patient Portal</a>
+        {/* Patient Safety Redirect & Mobile Footer (Left Side) */}
+        <div className="w-full mt-auto pb-8 flex flex-col items-center justify-center space-y-5 text-center">
+          <div>
+            <p className="text-xs text-slate-500 mb-1">Are you a patient? This portal is restricted to authorized personnel.</p>
+            <a href="/auth" className="text-xs font-bold text-[#0F766E] hover:underline transition-all">Return to Patient Portal</a>
+          </div>
+          
+          <div className="w-full border-t border-slate-200/60 pt-5 lg:hidden">
+            <a 
+              href="https://www.butabikahospital.go.ug" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="text-xs font-medium text-slate-400 text-center tracking-wide hover:text-[#0F766E] transition-colors"
+            >
+              &copy; {new Date().getFullYear()} Butabika National Referral Mental Hospital
+            </a>
+          </div>
         </div>
       </div>
 
@@ -222,7 +235,7 @@ export default function TherapistAuth() {
         {/* Right Footer Placement */}
         <div className="mt-6 text-center w-full max-w-md mx-auto">
           <a href="https://www.butabikahospital.go.ug/" target="_blank" rel="noopener noreferrer" className="text-[10px] text-slate-400 hover:text-emerald-400 uppercase tracking-widest opacity-80 transition-colors duration-300 inline-block">
-            © 2026 Butabika National Referral Mental Hospital
+            &copy; 2026 Butabika National Referral Mental Hospital
           </a>
         </div>
       </div>

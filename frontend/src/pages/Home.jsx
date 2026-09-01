@@ -23,40 +23,57 @@ const Home = () => {
         <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-teal-50/50 rounded-full blur-3xl -z-10 translate-x-1/3 -translate-y-1/4"></div>
         
         <div className="max-w-[1400px] mx-auto px-6 lg:px-8 relative z-10">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-teal-50 border border-teal-100">
-              <ShieldCheck className="h-4 w-4 text-[#0F766E]" />
-              <span className="text-xs font-bold text-[#0F766E] uppercase tracking-widest">
-                Healthcare-Grade Encryption
-              </span>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             
-            <h1 className="text-5xl lg:text-7xl font-heading font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
-              A Centre of Excellence. <br/>
-              <span className="text-[#0F766E]">Uncompromising Privacy.</span>
-            </h1>
-            
-            <p className="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-medium max-w-2xl">
-              Butabika National Referral Mental Hospital brings the highest standard of clinical care directly to you. Distance is no longer a barrier to accessing the region's top professionals.
-            </p>
-            
-            <div className="flex flex-col sm:flex-row items-center gap-4">
-              <button 
-                onClick={handleCTA}
-                className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-lg px-8 py-4 font-bold text-base transition-all shadow-md group"
-              >
-                {user ? 'Go to Dashboard' : 'Access Patient Portal'}
-                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </button>
-              {!user && (
+            {/* Left Column: Primary Content */}
+            <div className="max-w-3xl">
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 mb-8 rounded-full bg-teal-50 border border-teal-100 shadow-sm">
+                <ShieldCheck className="h-4 w-4 text-[#0F766E]" />
+                <span className="text-xs font-bold text-[#0F766E] uppercase tracking-widest">
+                  Healthcare-Grade Encryption
+                </span>
+              </div>
+              
+              <h1 className="text-5xl lg:text-7xl font-heading font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
+                A Centre of Excellence. <br/>
+                <span className="text-[#0F766E]">Uncompromising Privacy.</span>
+              </h1>
+              
+              <p className="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-medium max-w-2xl">
+                Butabika National Referral Mental Hospital brings the highest standard of clinical care directly to you. Distance is no longer a barrier to accessing the region's top professionals.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row items-center gap-4">
                 <button 
-                  onClick={() => navigate('/therapist/auth')}
-                  className="w-full sm:w-auto flex items-center justify-center bg-white border-2 border-slate-200 text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] font-bold px-8 py-4 rounded-lg transition-all shadow-sm"
+                  onClick={handleCTA}
+                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-lg px-8 py-4 font-bold text-base transition-all shadow-md group"
                 >
-                  Provider Sign In
+                  {user ? 'Go to Dashboard' : 'Access Patient Portal'}
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-              )}
+                {!user && (
+                  <button 
+                    onClick={() => navigate('/therapist/auth')}
+                    className="w-full sm:w-auto flex items-center justify-center bg-white border-2 border-slate-200 text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] font-bold px-8 py-4 rounded-lg transition-all shadow-sm"
+                  >
+                    Provider Sign In
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Right Column: Desktop Institutional Branding */}
+            <div className="hidden lg:flex relative items-center justify-center h-full translate-x-12 translate-y-12">
+              {/* Subtle ambient glow behind the crest */}
+              <div className="absolute inset-0 bg-teal-400/10 blur-[100px] rounded-full w-3/4 h-3/4 m-auto z-0"></div>
+              
+              <img 
+                src="/butabika.png" 
+                alt="Butabika National Referral Mental Hospital Crest" 
+                className="relative z-10 w-full max-w-lg object-contain drop-shadow-2xl animate-fade-in-up hover:scale-105 transition-transform duration-700 ease-out"
+              />
+            </div>
+
           </div>
         </div>
       </main>
