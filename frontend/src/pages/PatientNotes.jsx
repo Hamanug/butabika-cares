@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { ArrowLeft, Loader2, Phone, MessageCircle } from 'lucide-react';
+import { ArrowLeft, Loader2, Phone, MessageCircle, ChevronDown, ChevronUp, AlertTriangle, MonitorSmartphone, Users, FileText } from 'lucide-react';
 import { formatPatientName, getPatientAvatar, formatUgandanNumber } from '../utils/formatters';
 import JournalTimeline from '../components/JournalTimeline';
 import toast from 'react-hot-toast';
 
 import { ASSESSMENTS_DATA, getScoreInterpretation } from '../utils/screeningUtils';
+import { scoreAdultDSM5, scoreChildDSM5 } from '../utils/dsm5Scoring';
 
 export default function PatientNotes() {
   const { patientId } = useParams();
@@ -16,6 +17,7 @@ export default function PatientNotes() {
   const [activeTab, setActiveTab] = useState('journal');
   const [revealedContact, setRevealedContact] = useState(null);
   const [expandedScreeningId, setExpandedScreeningId] = useState(null);
+  const [isIntakeExpanded, setIsIntakeExpanded] = useState(false);
 
   const toggleScreening = (id) => setExpandedScreeningId(prev => prev === id ? null : id);
 
@@ -145,6 +147,101 @@ export default function PatientNotes() {
             </div>
           </div>
         </div>
+
+        {/* Clinical Intake Summary */}
+        {patientData.intakeData && (
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 mb-8 overflow-hidden">
+            <button 
+              onClick={() => setIsIntakeExpanded(!isIntakeExpanded)}
+              className="w-full p-6 flex justify-between items-center hover:bg-slate-50 transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <FileText className="w-5 h-5 text-[#0F766E]" />
+                <h2 className="text-xl font-bold text-slate-900">Clinical Intake Summary</h2>
+                {patientData.intakeData.dsm_5_assessment && Object.keys(patientData.intakeData.dsm_5_assessment).length > 0 && (
+                  <span className="bg-rose-50 text-rose-700 text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-md border border-rose-100 flex items-center gap-1.5 ml-4">
+                    <AlertTriangle className="w-3.5 h-3.5 animate-pulse" /> DSM-5-TR Attached
+                  </span>
+                )}
+              </div>
+              {isIntakeExpanded ? <ChevronUp className="w-5 h-5 text-slate-400" /> : <ChevronDown className="w-5 h-5 text-slate-400" />}
+            </button>
+
+            {isIntakeExpanded && (
+              <div className="px-6 pb-6 border-t border-slate-100 pt-6">
+                {(() => {
+                  const intake = patientData.intakeData;
+                  const dsm5 = intake.dsm_5_assessment || {};
+                  const isChild = intake.therapy_type === 'Child';
+                  const scoring = Object.keys(dsm5).length > 0 ? (isChild ? scoreChildDSM5(dsm5) : scoreAdultDSM5(dsm5)) : null;
+
+                  return (
+                    <div className="space-y-8">
+                      {/* High-Risk Banners */}
+                      {scoring?.criticalAlerts?.map((alert, idx) => (
+                        <div key={`alert-${idx}`} className="bg-rose-50 border-l-4 border-rose-600 p-4 mb-4 rounded-r-xl shadow-sm">
+                          <p className="text-rose-900 font-bold flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5 text-rose-600 animate-pulse" />
+                            CRITICAL ALERT: {alert.domain} Triggered (Score: {alert.score}{alert.label ? ` - ${alert.label}` : ''})
+                          </p>
+                        </div>
+                      ))}
+
+                      {/* Metadata Badges */}
+                      <div className="flex flex-wrap gap-2">
+                        <span className="px-3 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg bg-slate-100 text-slate-700 border border-slate-200">
+                          {intake.therapy_type || 'Individual'} Therapy
+                        </span>
+                        {intake.device_count > 1 && (
+                          <span className="px-3 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center gap-1.5">
+                            <MonitorSmartphone className="w-3.5 h-3.5" /> {intake.device_count} Devices
+                          </span>
+                        )}
+                        {intake.prior_therapy && (
+                          <span className="px-3 py-1.5 text-xs font-black uppercase tracking-wider rounded-lg bg-[#0F766E]/10 text-[#0F766E] border border-[#0F766E]/20">
+                            Returning Client
+                          </span>
+                        )}
+                      </div>
+
+                      {/* DSM-5 Domain Breakdown Grid */}
+                      {scoring?.results && (
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">DSM-5-TR Level 1 Domain Breakdown</h3>
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {scoring.results.map((res, idx) => (
+                              <div key={`domain-${idx}`} className={`p-4 rounded-xl border ${res.triggered ? 'bg-amber-50 border-amber-200' : 'bg-slate-50 border-slate-200'}`}>
+                                <p className="font-bold text-slate-900">{res.domain}</p>
+                                <div className="mt-2 flex justify-between items-center">
+                                  <span className="text-sm font-medium text-slate-500">Score: {res.score}</span>
+                                  {res.triggered ? (
+                                    <span className="text-xs font-bold text-amber-700 bg-amber-100 px-2 py-1 rounded-md">Requires Inquiry</span>
+                                  ) : (
+                                    <span className="text-xs font-bold text-slate-500 bg-slate-200 px-2 py-1 rounded-md">Normal</span>
+                                  )}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Notes Summary */}
+                      {intake.notes && (
+                        <div>
+                          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-b border-slate-100 pb-2">Patient Notes</h3>
+                          <p className="text-slate-700 font-medium whitespace-pre-wrap leading-relaxed bg-slate-50 p-4 rounded-xl border border-slate-100">
+                            {intake.notes}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* EMR Tabs */}
         <div className="flex space-x-1 border-b border-slate-200 mb-8 overflow-x-auto">

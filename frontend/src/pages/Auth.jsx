@@ -25,6 +25,8 @@ const Auth = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [password, setPassword] = useState('');
   const [dateOfBirth, setDateOfBirth] = useState('');
+  const [gender, setGender] = useState('');
+  const [nationality, setNationality] = useState('');
   const [otp, setOtp] = useState('');
   const [step, setStep] = useState('form'); 
   const [showPassword, setShowPassword] = useState(false);
@@ -120,6 +122,16 @@ const Auth = () => {
         setLoading(false);
         return;
       }
+      if (!gender) {
+        setError('Gender is required.');
+        setLoading(false);
+        return;
+      }
+      if (!nationality) {
+        setError('Nationality is required.');
+        setLoading(false);
+        return;
+      }
       const userAge = calculateAge(dateOfBirth);
       if (userAge < 18) {
         setError("You must be at least 18 years old to use this service.");
@@ -160,7 +172,7 @@ const Auth = () => {
     setError('');
     setSuccessMessage('');
     try {
-      const res = await axios.post('/api/auth/patient/verify-otp', { phone_number: formattedPhone, otp_code: otp, password: password.trim(), date_of_birth: dateOfBirth });
+      const res = await axios.post('/api/auth/patient/verify-otp', { phone_number: formattedPhone, otp_code: otp, password: password.trim(), date_of_birth: dateOfBirth, gender, nationality });
       login(res.data.user);
       await resolvePendingActions();
       const intendedRoute = sessionStorage.getItem('intendedRoute');
@@ -318,16 +330,44 @@ const Auth = () => {
                 </div>
 
                 {isSignUp && (
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-[#155E75]">Date of Birth</label>
-                    <Input 
-                      type="date" 
-                      value={dateOfBirth} 
-                      onChange={(e) => setDateOfBirth(e.target.value)} 
-                      className="h-12 text-base bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
-                      required 
-                    />
-                  </div>
+                  <>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-[#155E75]">Date of Birth</label>
+                      <Input 
+                        type="date" 
+                        value={dateOfBirth} 
+                        onChange={(e) => setDateOfBirth(e.target.value)} 
+                        className="h-12 text-base bg-white border border-slate-300 focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200"
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-[#155E75]">Gender</label>
+                      <select 
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                        className="w-full h-12 text-base bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200 px-3"
+                        required
+                      >
+                        <option value="" disabled hidden>Select Gender</option>
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-[#155E75]">Nationality</label>
+                      <select 
+                        value={nationality}
+                        onChange={(e) => setNationality(e.target.value)}
+                        className="w-full h-12 text-base bg-white border border-slate-300 rounded-md focus:outline-none focus:ring-0 focus:ring-offset-0 focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus:border-[#0F766E] focus-visible:border-[#0F766E] transition-colors duration-200 px-3"
+                        required
+                      >
+                        <option value="" disabled hidden>Select Nationality</option>
+                        <option value="Ugandan">Ugandan</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </>
                 )}
 
                 <Button type="submit" disabled={loading} className="w-full h-12 text-base mt-4 shadow-md font-semibold tracking-wide bg-[#0F766E] hover:bg-[#115E59]">

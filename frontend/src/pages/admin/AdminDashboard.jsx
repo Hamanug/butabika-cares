@@ -1,100 +1,69 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { Users, UserCog, Activity, Download, LogOut, AlertTriangle, CheckCircle, XCircle, CreditCard, Camera } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; // Adjust path if needed
+import { Activity, ShieldAlert, Power, Server, LogOut, CheckCircle2, AlertTriangle, CreditCard } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import toast from 'react-hot-toast';
 
 export default function AdminDashboard() {
-  const [activeTab, setActiveTab] = useState('overview');
-  const navigate = useNavigate();
   const { logout } = useAuth();
-
-  const [tFirstName, setTFirstName] = useState('');
-  const [tLastName, setTLastName] = useState('');
-  const [tEmail, setTEmail] = useState('');
-  const [tPhone, setTPhone] = useState('');
-  const [tPassword, setTPassword] = useState('');
-  const [tSpecialization, setTSpecialization] = useState('');
-  const [tCredentials, setTCredentials] = useState('');
-  const [tSuccess, setTSuccess] = useState('');
-  const [tError, setTError] = useState('');
-
+  const navigate = useNavigate();
+  
   const [smsBalance, setSmsBalance] = useState('--');
-  const [analytics, setAnalytics] = useState({ totalUsers: '--', activeTherapists: '--', completedSessions: '--' });
-  const [usersList, setUsersList] = useState([]);
-  const [crisisAlerts, setCrisisAlerts] = useState([]);
-  const [pendingAvatars, setPendingAvatars] = useState([]);
-
+  const [logs, setLogs] = useState([]);
+  const [staff, setStaff] = useState([]);
+  const [switches, setSwitches] = useState({
+    intakeOpen: true,
+    smsRouting: true,
+    maintenanceMode: false
+  });
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const [smsRes, analyticsRes, usersRes, alertsRes, avatarsRes] = await Promise.all([
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/sms-balance`, { withCredentials: true }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/analytics`, { withCredentials: true }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/users`, { withCredentials: true }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/crisis-alerts`, { withCredentials: true }),
-          axios.get(`${import.meta.env.VITE_API_URL}/api/admin/avatars/pending`, { withCredentials: true }).catch(() => ({ data: [] }))
-        ]);
-        setSmsBalance(smsRes.data.balance);
-        setAnalytics(analyticsRes.data);
-        setUsersList(usersRes.data);
-        setCrisisAlerts(alertsRes.data);
-        setPendingAvatars(avatarsRes.data);
-      } catch (err) {
-        console.error('Failed to fetch admin data', err);
-      }
-    };
-    fetchData();
-  }, [activeTab]);
+    fetchDashboardData();
+  }, []);
 
-  const handleApproveAvatar = async (providerId) => {
+  const fetchDashboardData = async () => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/avatar/approve`, { provider_id: providerId }, { withCredentials: true });
-      setPendingAvatars(prev => prev.filter(p => p.id !== providerId));
-      toast.success('Avatar approved');
-    } catch { toast.error('Failed to approve avatar'); }
-  };
-
-  const handleRejectAvatar = async (providerId) => {
-    try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/avatar/reject`, { provider_id: providerId }, { withCredentials: true });
-      setPendingAvatars(prev => prev.filter(p => p.id !== providerId));
-      toast.success('Avatar rejected');
-    } catch { toast.error('Failed to reject avatar'); }
-  };
-
-  const handleToggleUserStatus = async (userId, currentStatus) => {
-    try {
-      await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/users/${userId}/status`, { is_active: !currentStatus }, { withCredentials: true });
-      setUsersList(usersList.map(u => u.id === userId ? { ...u, is_active: !currentStatus } : u));
-    } catch {
-      toast.error('Failed to update user status');
+      const [smsRes, logsRes, switchesRes, staffRes] = await Promise.all([
+        axios.get(`${import.meta.env.VITE_API_URL}/api/admin/system/sms-balance`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/admin/system/logs`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/admin/system/switches`, { withCredentials: true }),
+        axios.get(`${import.meta.env.VITE_API_URL}/api/admin/system/staff`, { withCredentials: true })
+      ]);
+      setSmsBalance(smsRes.data.balance);
+      setLogs(logsRes.data.logs);
+      setSwitches(switchesRes.data.switches);
+      setStaff(staffRes.data.staff);
+    } catch (error) {
+      console.error('Failed to load IT admin data', error);
+      toast.error('Failed to sync with command center.');
     }
   };
 
-  const handleCreateTherapist = async (e) => {
-    e.preventDefault();
-    setTSuccess('');
-    setTError('');
+  const triggerProvisioning = async (staffId) => {
     try {
-      await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/therapists`, {
-        first_name: tFirstName,
-        last_name: tLastName,
-        email: tEmail,
-        phone_number: tPhone,
-        password: tPassword,
-        specialization: tSpecialization,
-        credentials: tCredentials
-      }, { withCredentials: true });
-      setTSuccess('Therapist profile created successfully.');
-      setTFirstName(''); setTLastName(''); setTEmail(''); setTPhone(''); setTPassword(''); setTSpecialization(''); setTCredentials('');
-    } catch (err) {
-      if (err?.response?.data?.error) {
-        setTError(err.response.data.error);
-      } else {
-        setTError('Failed to create therapist profile.');
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/admin/system/provision/${staffId}`, {}, { withCredentials: true });
+      if (res.data.success) {
+        alert(`Provisioning successful!\n\nTemporary Password: ${res.data.tempPassword}\n\nPlease copy this and provide it to the staff member securely.`);
+        fetchDashboardData();
       }
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to provision staff member.');
+    }
+  };
+
+  const toggleSwitch = async (key, currentState) => {
+    try {
+      const res = await axios.put(`${import.meta.env.VITE_API_URL}/api/admin/system/switches`, {
+        switchKey: key,
+        state: !currentState
+      }, { withCredentials: true });
+      
+      setSwitches(res.data.switches);
+      toast.success(`${key} is now ${!currentState ? 'ON' : 'OFF'}`);
+    } catch (error) {
+      toast.error('Failed to toggle switch');
     }
   };
 
@@ -103,30 +72,24 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  const handleDownloadReport = () => {
-    console.log('[STUB] Downloading CSV Sessions Report...');
-    // Future API hook: window.open(`${import.meta.env.VITE_API_URL}/api/admin/reports/sessions`, '_blank');
-  };
-
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Admin Topbar */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-950 text-slate-300 flex flex-col font-mono">
+      {/* Header */}
+      <header className="border-b border-slate-800 bg-slate-900/50 sticky top-0 z-10 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-2 rounded-lg">
-              <Activity className="h-5 w-5 text-white" />
+          <div className="flex items-center gap-3">
+            <div className="bg-teal-500/20 p-2 rounded text-teal-400 border border-teal-500/30">
+              <Server className="h-5 w-5" />
             </div>
-            <h1 className="text-xl font-bold text-slate-800">Butabika Cares <span className="text-blue-600 font-medium">Admin</span></h1>
+            <h1 className="text-xl font-black text-white tracking-widest uppercase">IT Command Center</h1>
           </div>
           <div className="flex items-center gap-4">
-            <span className="text-sm font-medium text-slate-600">Master Admin</span>
-            <div className="flex items-center gap-2 bg-blue-50 text-blue-700 px-3 py-1.5 rounded-full text-sm font-medium border border-blue-100">
-              <CreditCard className="h-4 w-4" /> SMS Balance: UGX {smsBalance}
+            <div className="flex items-center gap-2 bg-slate-800 text-teal-400 px-3 py-1.5 rounded text-sm font-bold border border-slate-700 shadow-inner">
+              <CreditCard className="h-4 w-4" /> UGX {smsBalance}
             </div>
             <button 
               onClick={handleLogout}
-              className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-md transition-colors"
+              className="flex items-center gap-2 px-3 py-2 text-sm font-bold text-rose-500 hover:bg-rose-500/10 rounded transition-colors"
             >
               <LogOut className="h-4 w-4" />
               Sign Out
@@ -135,230 +98,156 @@ export default function AdminDashboard() {
         </div>
       </header>
 
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Main Grid */}
+      <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-8">
         
-        {/* Navigation Tabs */}
-        <div className="flex space-x-1 border-b border-slate-200 mb-8">
-          {[
-            { id: 'overview', label: 'System Overview', icon: Activity },
-            { id: 'alerts', label: 'Crisis Alerts', icon: AlertTriangle },
-            { id: 'users', label: 'Manage Users', icon: Users },
-            { id: 'therapists', label: 'Manage Therapists', icon: UserCog },
-            { id: 'moderation', label: 'Avatar Moderation', icon: Camera }
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab.id 
-                  ? 'border-blue-600 text-blue-700 bg-blue-50/50' 
-                  : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
-              }`}
-            >
-              <tab.icon className="h-4 w-4 mr-2" />
-              {tab.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Tab Panels */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 min-h-[500px]">
-          
-          {activeTab === 'overview' && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
+        {/* Left Column: Kill Switches */}
+        <div className="lg:col-span-1 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-teal-500 to-emerald-500"></div>
+            <h2 className="text-lg font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Power className="h-5 w-5 text-teal-500" />
+              System Overrides
+            </h2>
+            
+            <div className="space-y-4">
+              <div className="flex items-center justify-between p-4 bg-slate-950/50 rounded-lg border border-slate-800">
                 <div>
-                  <h2 className="text-lg font-semibold text-slate-800">System Overview</h2>
-                  <p className="text-sm text-slate-500">High-level metrics and system reporting.</p>
+                  <p className="font-bold text-white">Concierge Intake</p>
+                  <p className="text-xs text-slate-500">Route new patients to triage</p>
                 </div>
                 <button 
-                  onClick={handleDownloadReport}
-                  className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors shadow-sm"
+                  onClick={() => toggleSwitch('intakeOpen', switches.intakeOpen)}
+                  className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${switches.intakeOpen ? 'bg-teal-500' : 'bg-slate-700'}`}
                 >
-                  <Download className="h-4 w-4" />
-                  Download Sessions Report
+                  <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${switches.intakeOpen ? 'transform translate-x-6' : ''}`}></span>
                 </button>
               </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
-                <div className="p-5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p className="text-sm font-medium text-slate-500 mb-1">Total Users</p>
-                  <p className="text-3xl font-bold text-slate-800">{analytics.totalUsers}</p>
-                </div>
-                <div className="p-5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p className="text-sm font-medium text-slate-500 mb-1">Active Therapists</p>
-                  <p className="text-3xl font-bold text-slate-800">{analytics.activeTherapists}</p>
-                </div>
-                <div className="p-5 bg-slate-50 rounded-lg border border-slate-100">
-                  <p className="text-sm font-medium text-slate-500 mb-1">Completed Sessions</p>
-                  <p className="text-3xl font-bold text-slate-800">{analytics.completedSessions}</p>
-                </div>
-              </div>
-            </div>
-          )}
 
-          {activeTab === 'alerts' && (
-            <div>
-              <h2 className="text-lg font-semibold text-red-600 mb-6 flex items-center gap-2">
-                <AlertTriangle className="h-5 w-5" /> High Risk Crisis Alerts
-              </h2>
-              {crisisAlerts.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">No active crisis alerts.</div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="bg-red-50 text-red-700 border-b border-red-100">
-                        <th className="p-3 text-sm font-medium">Date</th>
-                        <th className="p-3 text-sm font-medium">Patient Name</th>
-                        <th className="p-3 text-sm font-medium">Contact</th>
-                        <th className="p-3 text-sm font-medium">Risk Score</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {crisisAlerts.map(alert => (
-                        <tr key={alert.id} className="border-b border-rose-200 bg-rose-50 hover:bg-rose-100 transition-colors">
-                          <td className="p-3 text-sm font-medium text-rose-700">{new Date(alert.created_at).toLocaleDateString()}</td>
-                          <td className="p-3 text-sm font-bold text-rose-900">{alert.first_name} {alert.last_name}</td>
-                          <td className="p-3 text-sm font-medium text-rose-700">{alert.phone_number || alert.email}</td>
-                          <td className="p-3 text-sm font-extrabold text-red-700 flex items-center gap-1">
-                            <span className="bg-red-200 text-red-800 px-2 py-1 rounded-full text-xs">Score: {alert.score}</span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'users' && (
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-6">User Management</h2>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="p-3 text-sm font-medium text-slate-600">Name</th>
-                      <th className="p-3 text-sm font-medium text-slate-600">Email</th>
-                      <th className="p-3 text-sm font-medium text-slate-600">Role</th>
-                      <th className="p-3 text-sm font-medium text-slate-600">Status</th>
-                      <th className="p-3 text-sm font-medium text-slate-600">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {usersList.map(u => (
-                      <tr key={u.id} className="border-b border-slate-100 hover:bg-slate-50">
-                        <td className="p-3 text-sm font-medium text-slate-800">{u.first_name} {u.last_name}</td>
-                        <td className="p-3 text-sm text-slate-600">{u.email}</td>
-                        <td className="p-3 text-sm text-slate-600 capitalize">{u.role}</td>
-                        <td className="p-3 text-sm">
-                          {u.is_active ? 
-                            <span className="inline-flex items-center gap-1 text-green-600 bg-green-50 px-2 py-1 rounded text-xs font-medium"><CheckCircle className="w-3 h-3"/> Active</span> : 
-                            <span className="inline-flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded text-xs font-medium"><XCircle className="w-3 h-3"/> Suspended</span>
-                          }
-                        </td>
-                        <td className="p-3 text-sm">
-                          <button 
-                            onClick={() => handleToggleUserStatus(u.id, u.is_active)}
-                            className={`px-3 py-1 rounded text-xs font-medium transition-colors ${u.is_active ? 'bg-red-100 text-red-700 hover:bg-red-200' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                          >
-                            {u.is_active ? 'Suspend' : 'Activate'}
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'therapists' && (
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-6">Onboard New Therapist</h2>
-              {tSuccess && <div className="bg-green-50 text-green-600 p-3 rounded-lg text-sm mb-6 border border-green-100">{tSuccess}</div>}
-              {tError && <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6 font-medium">{tError}</div>}
-              
-              <form onSubmit={handleCreateTherapist} className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">First Name</label>
-                    <input type="text" required value={tFirstName} onChange={e => { setTFirstName(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Last Name</label>
-                    <input type="text" required value={tLastName} onChange={e => { setTLastName(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
-                    <input type="email" required value={tEmail} onChange={e => { setTEmail(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">Phone Number</label>
-                    <input type="text" required value={tPhone} onChange={e => { setTPhone(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-                  </div>
-                </div>
+              <div className="flex items-center justify-between p-4 bg-slate-950/50 rounded-lg border border-slate-800">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Temporary Password</label>
-                  <input type="password" required value={tPassword} onChange={e => { setTPassword(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                  <p className="font-bold text-white">EgoSMS Routing</p>
+                  <p className="text-xs text-slate-500">Outbound notifications</p>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Specialization</label>
-                  <input type="text" required value={tSpecialization} onChange={e => { setTSpecialization(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="e.g. Clinical Psychologist" />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Professional Credentials</label>
-                  <textarea required value={tCredentials} onChange={e => { setTCredentials(e.target.value); if (tError) setTError(''); }} className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3" placeholder="License numbers, degrees, etc."></textarea>
-                </div>
-                <button type="submit" className="w-full bg-teal-700 hover:bg-teal-800 text-white py-3 rounded-lg font-medium transition-colors">
-                  Create Therapist Profile
+                <button 
+                  onClick={() => toggleSwitch('smsRouting', switches.smsRouting)}
+                  className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${switches.smsRouting ? 'bg-teal-500' : 'bg-slate-700'}`}
+                >
+                  <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${switches.smsRouting ? 'transform translate-x-6' : ''}`}></span>
                 </button>
-              </form>
-            </div>
-          )}
+              </div>
 
-          {activeTab === 'moderation' && (
-            <div>
-              <h2 className="text-lg font-semibold text-slate-800 mb-6 flex items-center gap-2">
-                <Camera className="h-5 w-5 text-[#0F766E]" /> PENDING AVATAR MODERATION
-              </h2>
-              {pendingAvatars.length === 0 ? (
-                <div className="text-center py-12 text-slate-500 font-medium">No pending avatar approvals.</div>
+              <div className="flex items-center justify-between p-4 bg-rose-950/20 rounded-lg border border-rose-900/30">
+                <div>
+                  <p className="font-bold text-rose-400">Maintenance Mode</p>
+                  <p className="text-xs text-rose-500/70">Lock out all non-admins</p>
+                </div>
+                <button 
+                  onClick={() => toggleSwitch('maintenanceMode', switches.maintenanceMode)}
+                  className={`w-12 h-6 rounded-full transition-colors relative focus:outline-none ${switches.maintenanceMode ? 'bg-rose-500' : 'bg-slate-700'}`}
+                >
+                  <span className={`absolute top-1 left-1 bg-white w-4 h-4 rounded-full transition-transform ${switches.maintenanceMode ? 'transform translate-x-6' : ''}`}></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column: Security Logs */}
+        <div className="lg:col-span-2 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl h-full min-h-[500px]">
+            <h2 className="text-lg font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <ShieldAlert className="h-5 w-5 text-indigo-500" />
+              Security Audit Tail
+            </h2>
+            
+            <div className="space-y-3">
+              {logs.length === 0 ? (
+                <div className="text-slate-500 text-sm text-center py-10">No recent logs available.</div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {pendingAvatars.map(provider => (
-                    <div key={provider.id} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">
-                      <div className="h-48 bg-slate-50 flex items-center justify-center p-4">
-                        <img src={`${import.meta.env.VITE_API_URL}${provider.profile_picture}`} alt="Pending Avatar" className="w-32 h-32 rounded-full object-cover border-[3px] border-white shadow-sm" />
+                logs.map((log, index) => (
+                  <div key={index} className="flex items-start gap-4 p-3 rounded bg-slate-950/50 border border-slate-800/50 text-sm">
+                    <div className="pt-0.5">
+                      {log.status === 'SUCCESS' ? 
+                        <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : 
+                        <AlertTriangle className="h-4 w-4 text-rose-500" />
+                      }
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-slate-200">{log.event}</span>
+                        <span className="text-xs text-slate-500">{new Date(log.timestamp).toLocaleString()}</span>
                       </div>
-                      <div className="p-5 flex-1 flex flex-col text-center border-t border-slate-100">
-                        <h3 className="text-lg font-bold text-slate-900">{provider.first_name} {provider.last_name}</h3>
-                        <p className="text-slate-500 font-mono text-xs mt-1 mb-6">License: {provider.license_number || 'N/A'}</p>
-                        <div className="mt-auto flex flex-col gap-2.5">
-                          <button 
-                            onClick={() => handleApproveAvatar(provider.id)}
-                            className="w-full bg-[#0F766E] hover:bg-[#115E59] text-white py-2.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm transition-colors"
-                          >
-                            Approve Image
-                          </button>
-                          <button 
-                            onClick={() => handleRejectAvatar(provider.id)}
-                            className="w-full bg-white border border-red-600 hover:bg-red-50 text-red-600 py-2.5 rounded-full text-xs font-bold uppercase tracking-widest shadow-sm transition-colors"
-                          >
-                            Reject
-                          </button>
-                        </div>
+                      <div className="text-xs text-slate-400 mt-1 font-mono">
+                        SRC_IP: {log.ip} | STAT: <span className={log.status === 'SUCCESS' ? 'text-emerald-400' : 'text-rose-400'}>{log.status}</span>
                       </div>
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))
               )}
             </div>
-          )}
+          </div>
+        </div>
 
+        {/* Full Width: Staff Provisioning */}
+        <div className="lg:col-span-3 space-y-6">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-6 shadow-xl">
+            <h2 className="text-lg font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Server className="h-5 w-5 text-fuchsia-500" />
+              Staff Provisioning
+            </h2>
+            
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-slate-800 text-xs uppercase tracking-widest text-slate-500">
+                    <th className="pb-3 px-4 font-bold">Staff Member</th>
+                    <th className="pb-3 px-4 font-bold">Role</th>
+                    <th className="pb-3 px-4 font-bold">Email</th>
+                    <th className="pb-3 px-4 font-bold">Status</th>
+                    <th className="pb-3 px-4 font-bold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800/50">
+                  {staff.map((s) => (
+                    <tr key={s.id} className="text-sm">
+                      <td className="py-4 px-4 font-medium text-slate-300">{s.name}</td>
+                      <td className="py-4 px-4">
+                        <span className="bg-slate-800 text-slate-300 px-2 py-1 rounded text-xs font-bold border border-slate-700">
+                          {s.role}
+                        </span>
+                      </td>
+                      <td className="py-4 px-4 text-slate-400">{s.email || 'N/A'}</td>
+                      <td className="py-4 px-4">
+                        {s.requires_password_change ? (
+                          <span className="text-amber-500 text-xs font-bold flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" /> Needs Setup
+                          </span>
+                        ) : (
+                          <span className="text-emerald-500 text-xs font-bold flex items-center gap-1">
+                            <CheckCircle2 className="h-3 w-3" /> Active
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-4 px-4 text-right">
+                        <button
+                          onClick={() => triggerProvisioning(s.id)}
+                          className="bg-teal-500/10 hover:bg-teal-500/20 text-teal-400 px-3 py-1.5 rounded text-xs font-bold border border-teal-500/30 transition-colors"
+                        >
+                          Provision Access
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {staff.length === 0 && (
+                    <tr>
+                      <td colSpan="5" className="py-8 text-center text-slate-500 text-sm">No staff records found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </div>
       </main>
     </div>

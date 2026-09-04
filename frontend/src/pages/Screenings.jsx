@@ -12,7 +12,8 @@ const INSTRUMENTS = {
   'PHQ9': { title: 'PHQ-9 Depression', description: 'Assesses the severity of depression symptoms.', time: '3-5 minutes', questions: ASSESSMENTS_DATA['PHQ9'], icon: CloudRain, colorTheme: "bg-blue-50 text-blue-500" },
   'PCL5': { title: 'PCL-5 PTSD', description: 'Measures symptoms of Post-Traumatic Stress Disorder.', time: '5-10 minutes', questions: ASSESSMENTS_DATA['PCL5'], icon: Shield, colorTheme: "bg-purple-50 text-purple-600" },
   'NSSI': { title: 'NSSI Self-Harm', description: 'Evaluates risk and history of non-suicidal self-injury.', time: '1-2 minutes', questions: ASSESSMENTS_DATA['NSSI'], icon: Activity, colorTheme: "bg-rose-50 text-rose-500" },
-  'SUICIDE_RISK': { title: 'Suicide Risk Screen', description: 'Screens for current and past risk of self-harm.', time: '1-2 minutes', questions: ASSESSMENTS_DATA['SUICIDE_RISK'], icon: LifeBuoy, colorTheme: "bg-orange-50 text-orange-500" }
+  'SUICIDE_RISK': { title: 'Suicide Risk Screen', description: 'Screens for current and past risk of self-harm.', time: '1-2 minutes', questions: ASSESSMENTS_DATA['SUICIDE_RISK'], icon: LifeBuoy, colorTheme: "bg-orange-50 text-orange-500" },
+  'DSM5_ADULT': { title: 'DSM-5-TR Level 1 (Adult)', description: 'Comprehensive cross-cutting symptom measure assessing 13 psychiatric domains.', time: '5-10 minutes', questions: ASSESSMENTS_DATA['DSM5_ADULT'], icon: ClipboardList, colorTheme: "bg-indigo-50 text-indigo-600" }
 };
 
 export default function Screenings() {

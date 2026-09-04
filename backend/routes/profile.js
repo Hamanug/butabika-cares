@@ -1,5 +1,6 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
@@ -32,7 +33,7 @@ const upload = multer({ storage });
 router.get('/', authenticate, async (req, res) => {
   try {
     const result = await db.query(`
-      SELECT u.id, u.phone_number, u.role, u.email, u.display_id,
+      SELECT u.id, u.phone_number, u.role, u.email, u.display_id, u.gender, u.nationality,
              p.first_name, p.last_name, p.bio, p.occupation, p.profile_picture 
       FROM users u 
       LEFT JOIN profiles p ON u.id = p.user_id 
@@ -118,6 +119,52 @@ router.post('/upload', authenticate, upload.single('profile_picture'), async (re
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Server error' });
+  }
+});
+
+// PUT /complete (Legacy Profile Interceptor)
+router.put('/complete', authenticate, async (req, res) => {
+  try {
+    const { gender, nationality } = req.body;
+    if (!gender || !nationality) {
+      return res.status(400).json({ error: 'Gender and Nationality are required.' });
+    }
+    
+    await db.query(`
+      UPDATE users 
+      SET gender = $1, nationality = $2 
+      WHERE id = $3
+    `, [gender, nationality, req.user.id]);
+    
+    res.json({ message: 'Profile updated successfully.' });
+  } catch (error) {
+    console.error('Profile completion error:', error);
+    res.status(500).json({ error: 'Failed to update profile.' });
+  }
+});
+
+// PUT /api/profile/update-password
+router.put('/update-password', authenticate, async (req, res) => {
+  try {
+    const { newPassword } = req.body;
+    
+    if (!newPassword || newPassword.length < 8) {
+      return res.status(400).json({ error: 'Password must be at least 8 characters long.' });
+    }
+
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+
+    await db.query(`
+      UPDATE users 
+      SET password_hash = $1, requires_password_change = FALSE 
+      WHERE id = $2
+    `, [hashedPassword, req.user.id]);
+
+    res.json({ message: 'Password updated successfully. Account secured.' });
+  } catch (error) {
+    console.error('Password rotation error:', error);
+    res.status(500).json({ error: 'Failed to update password.' });
   }
 });
 

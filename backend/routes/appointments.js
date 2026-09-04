@@ -17,6 +17,83 @@ const authenticate = (req, res, next) => {
   }
 };
 
+// POST /api/appointments/concierge-intake
+router.post('/concierge-intake', authenticate, async (req, res) => {
+  try {
+    const patientId = req.user.id;
+    const { 
+      therapy_type, // 'Individual', 'Couples', 'Child', 'Group'
+      primary_focus, 
+      relationship_status, 
+      mandatory_notes, 
+      requested_date, 
+      requested_time_block,
+      therapist_id,
+      dsm_5_assessment,
+      partner_ids,
+      group_member_ids,
+      device_count
+    } = req.body;
+
+    // 1. Automate Prior Therapy Check (Has the user had past sessions?)
+    const priorTherapyCheck = await db.query(
+      `SELECT COUNT(*) FROM appointments WHERE patient_id = $1 AND status NOT IN ('pending', 'cancelled')`, 
+      [patientId]
+    );
+    const hasPriorTherapy = parseInt(priorTherapyCheck.rows[0].count) > 0;
+
+    // 2. Update Patient Demographics (Religion removed per clinical guidelines)
+    await db.query(`
+      UPDATE users 
+      SET relationship_status = COALESCE($1, relationship_status)
+      WHERE id = $2
+    `, [relationship_status, patientId]);
+
+    // 3. Format clinical notes for the therapist
+    const clinicalIntakeNotes = `
+[CLINICAL INTAKE SUMMARY]
+Therapy Type: ${therapy_type}
+Prior Therapy on Platform: ${hasPriorTherapy ? 'Yes' : 'No'}
+Primary Focus: ${primary_focus}
+Devices on Call: ${device_count || 1}
+
+[PATIENT'S MANDATORY DETAILS]
+${mandatory_notes || 'None provided.'}
+    `.trim();
+
+    // 4. Create the Appointment with new Group/DSM-5 capabilities
+    const appointmentRes = await db.query(`
+      INSERT INTO appointments (
+        patient_id, therapist_id, appointment_date, appointment_time, 
+        status, notes, therapy_type, partner_ids, group_member_ids, 
+        device_count, dsm_5_assessment, prior_therapy
+      )
+      VALUES ($1, $2, $3, $4, 'pending', $5, $6, $7, $8, $9, $10, $11)
+      RETURNING id
+    `, [
+      patientId, 
+      therapist_id || null, 
+      requested_date, 
+      requested_time_block, 
+      clinicalIntakeNotes,
+      therapy_type,
+      partner_ids || '{}',
+      group_member_ids || '{}',
+      device_count || 1,
+      dsm_5_assessment || '{}',
+      hasPriorTherapy
+    ]);
+
+    res.json({ 
+      message: 'Intake successful. Your request is in the triage queue.', 
+      appointmentId: appointmentRes.rows[0].id 
+    });
+  } catch (error) {
+    console.error('Concierge Intake Error:', error);
+    res.status(500).json({ error: 'Failed to process intake request.' });
+  }
+});
+
 // Patient: Book Appointment
 router.post('/book', authenticate, async (req, res) => {
   try {
@@ -86,7 +163,7 @@ router.get('/pending', authenticate, async (req, res) => {
       FROM appointments a 
       JOIN users u ON a.patient_id = u.id 
       LEFT JOIN profiles p ON u.id = p.user_id
-      WHERE a.status = 'pending' AND (a.therapist_id IS NULL OR a.therapist_id = $1)
+      WHERE a.status = 'pending' AND a.therapist_id = $1
       ORDER BY a.created_at DESC`, [req.user.id]
     );
     res.json(result.rows);
@@ -181,7 +258,12 @@ router.get('/my-sessions', authenticate, async (req, res) => {
          FROM appointments a 
          LEFT JOIN users u ON a.therapist_id = u.id 
          LEFT JOIN profiles p ON u.id = p.user_id
-         WHERE a.patient_id = $1 AND a.status IN ('scheduled', 'pending', 'completed')
+         WHERE (
+           a.patient_id = $1 
+           OR (SELECT display_id FROM users WHERE id = $1) = ANY(a.partner_ids) 
+           OR (SELECT display_id FROM users WHERE id = $1) = ANY(a.group_member_ids)
+         )
+         AND a.status IN ('scheduled', 'pending', 'completed')
          ORDER BY a.appointment_date ASC`;
 
     const result = await db.query(query, [req.user.id]);

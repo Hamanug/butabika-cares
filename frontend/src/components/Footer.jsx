@@ -1,7 +1,11 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 const Footer = () => {
+  const { user } = useAuth();
+  const navigate = useNavigate();
   const currentYear = new Date().getFullYear();
   
   return (
@@ -9,44 +13,74 @@ const Footer = () => {
       <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
           
-          {/* Column 1: Brand & Description */}
+          {/* Column 1: Brand & Institutional Seal */}
           <div className="flex flex-col items-start md:col-span-2">
-            <div className="flex items-center gap-3 mb-6">
-              <img 
-                src="/butabika.png" 
-                alt="Butabika Hospital" 
-                className="h-12 object-contain" 
-                onError={(e) => e.target.style.display='none'} 
-              />
-              <Link className="font-heading text-2xl font-bold text-slate-900 tracking-tight hover:opacity-80 transition-opacity" to="/">
-                Butabika Cares
-              </Link>
-            </div>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-md font-medium">
+            <Link className="text-2xl font-black tracking-tight hover:opacity-80 transition-opacity mb-4" to="/">
+              <span className="text-[#0F766E]">Butabika</span> <span className="text-slate-600">Cares</span>
+            </Link>
+            <p className="text-sm text-slate-500 leading-relaxed max-w-md font-medium mb-8">
               An evidence-based digital mental health platform supporting therapeutic care, patient well-being, and clinical excellence across Uganda.
             </p>
+            
+            {/* Centered Seal Wrapper */}
+            <div className="w-full max-w-md flex justify-center">
+              <img 
+                src="/butabika.png" 
+                alt="Butabika Hospital Seal" 
+                className="h-28 object-contain drop-shadow-md" 
+                onError={(e) => e.target.style.display='none'} 
+              />
+            </div>
           </div>
 
           {/* Column 2: Quick Links */}
           <div>
-            <h4 className="text-slate-900 font-bold mb-6 tracking-wider text-xs uppercase">Navigation</h4>
+            <h4 className="text-slate-900 font-black mb-6 tracking-[0.2em] text-xs uppercase">Navigation</h4>
             <ul className="space-y-4 text-sm font-medium">
               <li><Link className="text-slate-500 hover:text-primary inline-flex items-center transition-colors" to="/">Home</Link></li>
               <li><Link className="text-slate-500 hover:text-primary inline-flex items-center transition-colors" to="/about">About Us</Link></li>
               <li><Link className="text-slate-500 hover:text-primary inline-flex items-center transition-colors" to="/resources">Resources</Link></li>
-              <li><Link className="text-slate-500 hover:text-primary inline-flex items-center transition-colors" to="/therapists">Directory</Link></li>
+              <li>
+                {!user ? (
+                  <button 
+                    onClick={() => {
+                      toast('Please sign in to request therapy.', { icon: '🔒' });
+                      sessionStorage.setItem('intendedRoute', '/intake');
+                      navigate('/auth');
+                    }}
+                    className="text-slate-500 hover:text-primary inline-flex items-center transition-colors bg-transparent border-none cursor-pointer p-0 text-left font-inherit"
+                  >
+                    Therapy
+                  </button>
+                ) : (
+                  <Link 
+                    className="text-slate-500 hover:text-primary inline-flex items-center transition-colors" 
+                    to="/intake"
+                  >
+                    Therapy
+                  </Link>
+                )}
+              </li>
               {/* Discrete Staff Routing */}
               <li className="pt-2">
-                <Link className="text-slate-400 hover:text-primary inline-flex items-center transition-colors font-semibold" to="/therapist/auth">
+                <button 
+                  onClick={() => {
+                    if (user?.role === 'therapist') return navigate('/therapist/dashboard');
+                    if (user?.role === 'clinical_admin') return navigate('/clinical/dashboard');
+                    if (user?.role === 'admin') return navigate('/admin/dashboard');
+                    navigate('/provider/auth');
+                  }}
+                  className="text-slate-400 hover:text-primary inline-flex items-center transition-colors font-semibold bg-transparent border-none cursor-pointer p-0 text-left font-inherit"
+                >
                   Provider Portal
-                </Link>
+                </button>
               </li>
             </ul>
           </div>
 
           {/* Column 3: Contact Info */}
           <div>
-            <h4 className="text-slate-900 font-bold mb-6 tracking-wider text-xs uppercase">Contact</h4>
+            <h4 className="text-slate-900 font-black mb-6 tracking-[0.2em] text-xs uppercase">Contact</h4>
             <div className="space-y-5">
               <a href="tel:0800211306" className="group flex items-start gap-3 transition-all">
                 <div className="mt-1 text-primary group-hover:scale-110 transition-transform">
@@ -72,9 +106,14 @@ const Footer = () => {
 
         {/* Bottom Bar: Clinical & Centered */}
         <div className="flex flex-col items-center justify-center pt-10 border-t border-border gap-5 text-center">
-          <p className="text-base font-semibold text-slate-600">
+          <a 
+            href="https://www.butabikahospital.go.ug" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="block py-1 text-sm font-semibold text-slate-500 hover:text-[#0F766E] transition-colors duration-300 cursor-pointer"
+          >
             &copy; {currentYear} Butabika National Referral Mental Hospital
-          </p>
+          </a>
           
           <div className="flex items-center justify-center gap-6 text-sm font-bold text-slate-500">
             <Link className="hover:text-[#0F766E] transition-colors" to="/privacy">Privacy Policy</Link>
@@ -82,7 +121,15 @@ const Footer = () => {
           </div>
 
           <div className="mt-2 text-xs font-medium text-slate-400 tracking-wide">
-            Powered by Elixir PHC and <span className="font-bold text-slate-500">Feyn Systems</span>
+            Built by{' '}
+            <a 
+              href="https://share.google/y58FhFwk07ghShY3i" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="font-bold text-[#0F766E] hover:text-[#0D655E] transition-colors duration-300"
+            >
+              Feyn Systems
+            </a>
           </div>
         </div>
       </div>

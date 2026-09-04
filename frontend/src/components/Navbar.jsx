@@ -4,8 +4,17 @@ import { MessageSquare, User } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useSocket } from '../context/SocketContext';
 import axios from 'axios';
-import { formatUserName } from '../utils/formatters';
+// Removes formatUserName
 import { Button } from './ui/Button';
+import toast from 'react-hot-toast';
+
+const formatUserName = (user) => {
+  if (!user) return '';
+  if (user.role === 'admin') return `IT Admin (${user.email.split('@')[0]})`;
+  if (user.role === 'clinical_admin') return `Clinical Admin (${user.email.split('@')[0]})`;
+  if (user.role === 'therapist') return `Provider (${user.email.split('@')[0]})`;
+  return `Patient ${user.display_id || 'ID_PENDING'}`;
+};
 
 const Navbar = () => {
   const { user, logout, isLoading } = useAuth();
@@ -123,19 +132,21 @@ const Navbar = () => {
 
   return (
     <header className="bg-white/80 backdrop-blur-xl border-b border-slate-200/60 fixed w-full top-0 z-50 transition-all duration-300 shadow-[0_4px_30px_rgba(0,0,0,0.03)]">
+      {/* MAIN WRAPPER */}
       <nav className="flex items-center justify-between w-full h-20 gap-2 sm:gap-4 max-w-[1400px] mx-auto px-3 sm:px-6 md:px-8">
         
-        {/* Left Zone: Brand & Nav Links */}
-        <div className="flex items-center gap-4 lg:gap-8 flex-shrink-0">
-          <Link to={getLogoPath()} className="flex items-center gap-2 sm:gap-3 group">
+        {/* LEFT ZONE: Logo & Nav Links Grouped Tightly */}
+        <div className="flex items-center gap-4 lg:gap-6 flex-shrink-0">
+          
+          <Link to={getLogoPath()} className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
             <img src="/butabika.png" alt="Butabika Logo" className="h-9 sm:h-10 md:h-12 w-auto object-contain transition-transform group-hover:scale-105" />
             <span className="text-lg sm:text-xl md:text-2xl font-black tracking-tight hidden md:block">
               <span className="text-[#0F766E]">Butabika</span> <span className="text-slate-600">Cares</span>
             </span>
           </Link>
           
-          {/* Desktop Navigation Links */}
-          <div className="hidden lg:flex gap-1 xl:gap-2 items-center ml-2 xl:ml-4">
+          {/* Navigation Links (No more ml-4 margin, directly next to logo) */}
+          <div className="hidden lg:flex items-center gap-0.5 xl:gap-1">
             {isLoading ? (
               <div className="flex gap-6 animate-pulse opacity-40">
                 <div className="h-5 w-12 bg-slate-200 rounded"></div>
@@ -148,31 +159,67 @@ const Navbar = () => {
                   <Link to="/" className={getNavLinkClass('/')}>Home</Link>
                   <Link to="/about" className={getNavLinkClass('/about')}>About</Link>
                   <Link to="/resources" className={getNavLinkClass('/resources')}>Resources</Link>
-                  <Link to="/therapists" className={getNavLinkClass('/therapists')}>Therapists</Link>
+                  
+                  {!user ? (
+                    <button 
+                      onClick={() => {
+                        toast('Please sign in to request therapy.', { icon: '🔒' });
+                        sessionStorage.setItem('intendedRoute', '/intake');
+                        navigate('/auth');
+                      }}
+                      className={`${getNavLinkClass('/intake')} bg-transparent border-none cursor-pointer`}
+                    >
+                      Therapy
+                    </button>
+                  ) : (
+                    <Link to="/intake" className={getNavLinkClass('/intake')}>Therapy</Link>
+                  )}
                   {user && <Link to={getDashboardPath()} className={getNavLinkClass(getDashboardPath())}>Dashboard</Link>}
                 </>
               ) : (
-                <Link to={getDashboardPath()} className={getNavLinkClass(getDashboardPath())}>Workspace</Link>
+                <Link to={getDashboardPath()} className={getDashboardPath() ? getNavLinkClass(getDashboardPath()) : getNavLinkClass('/')}>Workspace</Link>
               )
             )}
           </div>
         </div>
 
-        {/* Right Zone: Sponsors & Profile */}
-        <div className="flex items-center gap-2 sm:gap-4 relative min-w-0 justify-end">
+        {/* RIGHT ZONE: Sponsors & Profile */}
+        <div className="flex items-center justify-end gap-2 sm:gap-4 min-w-0">
           
-          {/* Integrated Sponsors (Desktop Only - strictly hidden on lg and below) */}
-          <div className="hidden xl:flex items-center gap-5 pr-5 border-r border-slate-200 mr-2 flex-shrink-0">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">Supported By</span>
-            <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer">
-              <img src="/catalonia.png" alt="Catalonia" className="h-5 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
-            </a>
-            <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer">
-              <img src="/aha.png" alt="AHA" className="h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
-            </a>
-            <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer">
-              <img src="/famamundi.jpeg" alt="Farmamundi" className="h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
-            </a>
+          {/* Reverted back to lg:flex to show on standard laptops, with tighter padding */}
+          <div className="hidden lg:flex flex-col items-start gap-1.5 pr-3 xl:pr-4 border-r border-slate-200 mr-1 xl:mr-2 flex-shrink-0">
+            {/* Row 1: Supported By */}
+            <div className="flex items-center gap-3 xl:gap-4">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest select-none">Supported By</span>
+              <a href="https://exteriors.gencat.cat" target="_blank" rel="noopener noreferrer">
+                <img src="/catalonia.png" alt="Catalonia" className="h-4 xl:h-5 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+              </a>
+              <a href="https://africahumanitarian.org" target="_blank" rel="noopener noreferrer">
+                <img src="/aha.png" alt="AHA" className="h-3 xl:h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+              </a>
+              <a href="https://farmamundi.org" target="_blank" rel="noopener noreferrer">
+                <img src="/famamundi.jpeg" alt="Farmamundi" className="h-3 xl:h-4 w-auto object-contain grayscale opacity-60 hover:grayscale-0 hover:opacity-100 transition-all duration-300" />
+              </a>
+            </div>
+
+            {/* Row 2: Clinical Partner */}
+            <div className="flex items-center gap-3 xl:gap-4">
+              <span className="text-[10px] font-bold text-[#0F766E]/60 uppercase tracking-widest select-none">
+                Clinical Partner
+              </span>
+              
+              {/* Group container synchronizes hover effects for both logo and text */}
+              <div className="flex items-center gap-1.5 group cursor-default">
+                <img 
+                  src="/elixir.png" 
+                  alt="Elixir Logo" 
+                  className="h-4 xl:h-5 w-auto object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" 
+                />
+                <span className="text-[11px] font-bold text-slate-500 group-hover:text-[#0F766E] transition-colors duration-300">
+                  Elixir PHC
+                </span>
+              </div>
+            </div>
           </div>
 
           {isLoading ? (
@@ -213,13 +260,15 @@ const Navbar = () => {
                             <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Signed in as</p>
                             <p className="text-sm text-slate-900 truncate font-bold">{formatUserName(user)}</p>
                           </div>
-                          <Link
-                            to="/profile"
-                            className="block px-4 py-3 text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-[#0F766E] transition-colors"
-                            onClick={() => setIsDropdownOpen(false)}
-                          >
-                            My Profile
-                          </Link>
+                          {(user.role !== 'admin' && user.role !== 'clinical_admin') && (
+                            <Link
+                              to="/profile"
+                              className="block px-4 py-3 text-sm font-bold text-slate-600 hover:bg-teal-50 hover:text-[#0F766E] transition-colors"
+                              onClick={() => setIsDropdownOpen(false)}
+                            >
+                              My Profile
+                            </Link>
+                          )}
                           <button
                             onClick={() => {
                               setIsDropdownOpen(false);
@@ -264,7 +313,22 @@ const Navbar = () => {
                 <Link to="/" className={getMobileNavLinkClass('/')}>Home</Link>
                 <Link to="/about" className={getMobileNavLinkClass('/about')}>About</Link>
                 <Link to="/resources" className={getMobileNavLinkClass('/resources')}>Resources</Link>
-                <Link to="/therapists" className={getMobileNavLinkClass('/therapists')}>Therapists</Link>
+                
+                {!user ? (
+                  <button 
+                    onClick={() => {
+                      toast('Please sign in to request therapy.', { icon: '🔒' });
+                      sessionStorage.setItem('intendedRoute', '/intake');
+                      navigate('/auth');
+                    }}
+                    className={`${getMobileNavLinkClass('/intake')} bg-transparent border-none cursor-pointer text-left`}
+                  >
+                    Therapy
+                  </button>
+                ) : (
+                  <Link to="/intake" className={getMobileNavLinkClass('/intake')}>Therapy</Link>
+                )}
+
                 {user && <Link to={getDashboardPath()} className={getMobileNavLinkClass(getDashboardPath())}>Dashboard</Link>}
                 
                 {/* Mobile specific sign-in button if not logged in */}

@@ -201,12 +201,21 @@ router.get('/patient/:id', authenticate, async (req, res) => {
       ORDER BY created_at DESC
     `, [patientId]);
 
+    // 6. Fetch intake data
+    const intakeQuery = await db.query(`
+      SELECT therapy_type, device_count, prior_therapy, partner_ids, group_member_ids, dsm_5_assessment, notes
+      FROM appointments 
+      WHERE patient_id = $1 AND therapist_id = $2
+      ORDER BY created_at DESC LIMIT 1
+    `, [patientId, req.user.id]);
+
     res.json({
       ...patientData,
       entries,
       stressScores: stressQuery.rows,
       thoughtRecords: thoughtRecordsQuery.rows,
-      screenings: screeningsQuery.rows
+      screenings: screeningsQuery.rows,
+      intakeData: intakeQuery.rows.length > 0 ? intakeQuery.rows[0] : null
     });
 
   } catch (err) {

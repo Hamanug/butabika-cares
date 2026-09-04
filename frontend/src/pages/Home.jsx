@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ShieldCheck, Activity, Video, ArrowRight, Lock, Globe } from 'lucide-react';
@@ -7,11 +7,17 @@ const Home = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
 
-  const handleCTA = () => {
-    if (user?.role === 'patient') navigate('/dashboard');
-    else if (user?.role === 'therapist') navigate('/therapist/dashboard');
-    else if (user?.role === 'admin') navigate('/admin/dashboard');
-    else navigate('/auth');
+
+  const handlePatientClick = () => {
+    if (user?.role === 'patient') return navigate('/dashboard');
+    navigate('/auth');
+  };
+
+  const handleProviderClick = () => {
+    if (user?.role === 'therapist') return navigate('/therapist/dashboard');
+    if (user?.role === 'clinical_admin') return navigate('/clinical/dashboard');
+    if (user?.role === 'admin') return navigate('/admin/dashboard');
+    navigate('/provider/auth');
   };
 
   return (
@@ -34,31 +40,28 @@ const Home = () => {
                 </span>
               </div>
               
-              <h1 className="text-5xl lg:text-7xl font-heading font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
-                A Centre of Excellence. <br/>
+              <h1 className="text-4xl lg:text-5xl xl:text-6xl font-heading font-black text-slate-900 leading-[1.1] mb-6 tracking-tight">
+                A Centre of Excellence. <br className="hidden md:block" />
                 <span className="text-[#0F766E]">Uncompromising Privacy.</span>
               </h1>
               
               <p className="text-lg md:text-xl text-slate-500 mb-10 leading-relaxed font-medium max-w-2xl">
                 Butabika National Referral Mental Hospital brings the highest standard of clinical care directly to you. Distance is no longer a barrier to accessing the region's top professionals.
               </p>
-              
-              <div className="flex flex-col sm:flex-row items-center gap-4">
+
+              <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 animate-fade-in-up">
                 <button 
-                  onClick={handleCTA}
-                  className="w-full sm:w-auto flex items-center justify-center gap-2 bg-[#0F766E] hover:bg-[#115E59] text-white rounded-lg px-8 py-4 font-bold text-base transition-all shadow-md group"
+                  onClick={handlePatientClick}
+                  className="w-full sm:w-auto bg-[#0F766E] hover:bg-teal-800 text-white h-14 px-8 rounded-xl font-bold transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
                 >
-                  {user ? 'Go to Dashboard' : 'Access Patient Portal'}
-                  <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  Patient Portal
                 </button>
-                {!user && (
-                  <button 
-                    onClick={() => navigate('/therapist/auth')}
-                    className="w-full sm:w-auto flex items-center justify-center bg-white border-2 border-slate-200 text-slate-600 hover:border-[#0F766E] hover:text-[#0F766E] font-bold px-8 py-4 rounded-lg transition-all shadow-sm"
-                  >
-                    Provider Sign In
-                  </button>
-                )}
+                <button 
+                  onClick={handleProviderClick}
+                  className="w-full sm:w-auto bg-slate-50 hover:bg-slate-100 text-slate-700 h-14 px-8 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+                >
+                  Provider Portal
+                </button>
               </div>
             </div>
 
@@ -70,7 +73,7 @@ const Home = () => {
               <img 
                 src="/butabika.png" 
                 alt="Butabika National Referral Mental Hospital Crest" 
-                className="relative z-10 w-full max-w-lg object-contain drop-shadow-2xl animate-fade-in-up hover:scale-105 transition-transform duration-700 ease-out"
+                className="relative z-10 w-full max-w-md object-contain drop-shadow-2xl animate-fade-in-up hover:scale-105 transition-transform duration-700 ease-out"
               />
             </div>
 
@@ -78,25 +81,7 @@ const Home = () => {
         </div>
       </main>
 
-      {/* 2. TRUST BAR: Clinical Validation */}
-      <div className="border-b border-slate-100 bg-white py-8">
-        <div className="max-w-[1400px] mx-auto px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-center divide-y md:divide-y-0 md:divide-x divide-slate-100">
-            <div className="py-2">
-              <p className="text-3xl font-black text-slate-900">18+</p>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Age Verification Required</p>
-            </div>
-            <div className="py-2">
-              <p className="text-3xl font-black text-slate-900">256-Bit</p>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">End-to-End Encryption</p>
-            </div>
-            <div className="py-2">
-              <p className="text-3xl font-black text-slate-900">7</p>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Validated Clinical Instruments</p>
-            </div>
-          </div>
-        </div>
-      </div>
+
 
       {/* 3. CORE FEATURES: The Clinical Engine */}
       <section className="py-24 bg-slate-50">
@@ -146,22 +131,6 @@ const Home = () => {
           </div>
         </div>
       </section>
-
-      {/* 4. CLOSING CTA */}
-      <section className="py-24 bg-white border-t border-slate-100">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-3xl font-heading font-bold text-slate-900 mb-6 tracking-tight">Ready to prioritize your wellbeing?</h2>
-          <p className="text-lg text-slate-500 mb-8 font-medium">Join the thousands of Ugandans accessing secure, professional mental health support through Butabika Cares.</p>
-          <button 
-            onClick={handleCTA} 
-            className="bg-[#0F766E] hover:bg-[#115E59] text-white font-bold px-10 py-4 rounded-lg shadow-md transition-all inline-flex items-center gap-2 group"
-          >
-            Create Your Secure Account
-            <Lock className="h-4 w-4 group-hover:scale-110 transition-transform" />
-          </button>
-        </div>
-      </section>
-
     </div>
   );
 };

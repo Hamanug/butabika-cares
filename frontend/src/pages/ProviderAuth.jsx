@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, ArrowLeft, FileText, Shield, Video, Eye, EyeOff } from 'lucide-react';
 
-export default function TherapistAuth() {
+export default function ProviderAuth() {
   const { login } = useAuth();
   const navigate = useNavigate();
   
@@ -23,7 +23,7 @@ export default function TherapistAuth() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
-      const res = await axios.post('/api/auth/therapist/login', { identifier: identifier.trim(), password: password.trim() });
+      const res = await axios.post('/api/auth/provider-login', { identifier: identifier.trim(), password: password.trim() });
       if (res.data.requireReset) {
         setOtp(password); // Temporarily store the temp password to send to the reset endpoint
         setPassword(''); // Clear the password field for the new input
@@ -31,7 +31,10 @@ export default function TherapistAuth() {
         return;
       }
       login(res.data.user);
-      navigate('/therapist/dashboard');
+      if (res.data.user.role === 'therapist') navigate('/therapist/dashboard');
+      else if (res.data.user.role === 'admin') navigate('/admin/dashboard');
+      else if (res.data.user.role === 'clinical_admin') navigate('/clinical/dashboard');
+      else navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Invalid credentials.');
     } finally { setLoading(false); }
@@ -42,11 +45,14 @@ export default function TherapistAuth() {
     if (password.trim().length < 8) return setError('New password must be at least 8 characters.');
     setError(''); setLoading(true);
     try {
-      const res = await axios.post('/api/auth/therapist/set-initial-password', { 
+      const res = await axios.post('/api/auth/provider-set-password', { 
         identifier: identifier.trim(), temporary_password: otp, new_password: password.trim() 
       });
       login(res.data.user);
-      navigate('/therapist/dashboard');
+      if (res.data.user.role === 'therapist') navigate('/therapist/dashboard');
+      else if (res.data.user.role === 'admin') navigate('/admin/dashboard');
+      else if (res.data.user.role === 'clinical_admin') navigate('/clinical/dashboard');
+      else navigate('/');
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update password.');
     } finally { setLoading(false); }

@@ -81,7 +81,13 @@ const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_key_change_me';
 app.use('/api/auth', authRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/appointments', require('./routes/appointments'));
-app.use('/api/admin', require('./routes/admin'));
+
+const authenticateToken = require('./middleware/auth');
+const requireTier = require('./middleware/requireTier');
+const adminItRoutes = require('./routes/admin-it');
+app.use('/api/admin/system', authenticateToken, requireTier(['admin']), adminItRoutes);
+
+app.use('/api/admin-clinical', require('./routes/admin-clinical'));
 app.use('/api/screenings', require('./routes/screenings'));
 app.use('/api/journal', require('./routes/journal'));
 app.use('/api/messages', require('./routes/messages'));
@@ -101,7 +107,7 @@ app.get('/api/auth/me', async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     const userResult = await db.query(
-      `SELECT u.id, u.email, u.phone_number, u.role, u.display_id, p.first_name, p.last_name 
+      `SELECT u.id, u.email, u.phone_number, u.role, u.display_id, u.gender, u.nationality, p.first_name, p.last_name 
        FROM users u 
        LEFT JOIN profiles p ON u.id = p.user_id 
        WHERE u.id = $1`,
@@ -160,6 +166,10 @@ io.on('connection', (socket) => {
 
 // Attach io to the app so routes can use it
 app.set('io', io);
+
+// Initialize Background Daemons
+const smsMonitor = require('./services/smsMonitor');
+smsMonitor.start();
 
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

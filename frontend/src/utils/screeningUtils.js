@@ -605,6 +605,31 @@ export const ASSESSMENTS_DATA = {
       "question": "How often have you felt that difficulties were piling up so high that you could not overcome them?",
       "options": ["Never", "Sometimes", "Often", "Almost Always"]
     }
+  ],
+  "DSM5_ADULT": [
+    { "question": "Little interest or pleasure in doing things?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling down, depressed, or hopeless?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling more irritated, grouchy, or angry than usual?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Sleeping less than usual, but still have a lot of energy?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Starting lots more projects than usual or doing more risky things than usual?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling nervous, anxious, frightened, worried, or on edge?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling panic or being frightened?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Avoiding situations that make you anxious?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Unexplained aches and pains (e.g., head, back, joints, abdomen, legs)?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling that your illnesses are not being taken seriously enough?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Thoughts of actually hurting yourself?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Hearing things other people couldn't hear, such as voices even when no one was around?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling that someone could hear your thoughts, or that you could hear what another person was thinking?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Problems with sleep that affected your sleep quality over all?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Problems with memory (e.g., learning new information) or with location (e.g., finding your way home)?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Unpleasant thoughts, urges, or images that repeatedly enter your mind?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling driven to perform certain behaviors or mental acts over and over again?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Feeling detached or distant from yourself, your body, your physical surroundings, or your memories?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Not knowing who you really are or what you want out of life?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Not feeling close to other people or enjoying your relationships with them?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Drinking at least 4 drinks of any kind of alcohol in a single day?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Smoking any cigarettes, a cigar, or pipe, or using snuff or chewing tobacco?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] },
+    { "question": "Using any medicines ON YOUR OWN (e.g., painkillers, stimulants, sedatives, marijuana, cocaine, etc.)?", "options": ["None (0)", "Slight (1)", "Mild (2)", "Moderate (3)", "Severe (4)"] }
   ]
 };
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
@@ -14,13 +14,15 @@ import Home from './pages/Home';
 import TherapistDashboard from './pages/TherapistDashboard';
 import SessionHistory from './pages/SessionHistory';
 import Auth from './pages/Auth';
-import TherapistAuth from './pages/TherapistAuth';
-import AdminAuth from './pages/admin/AdminAuth.jsx';
+import ProviderAuth from './pages/ProviderAuth';
 import AdminDashboard from './pages/admin/AdminDashboard.jsx';
+import ClinicalAdminDashboard from './pages/admin/ClinicalAdminDashboard.jsx';
 import About from './pages/About';
 import Resources from './pages/Resources';
-import Therapists from './pages/Therapists';
 import Dashboard from './pages/Dashboard';
+import ProfileCompletion from './pages/ProfileCompletion';
+import ForcePasswordReset from './pages/ForcePasswordReset';
+import TherapyIntake from './pages/TherapyIntake';
 import Screenings from './pages/Screenings';
 import GuidedBreathing from './pages/GuidedBreathing';
 import Journal from './pages/Journal';
@@ -42,24 +44,49 @@ import RoleRoute from './components/RoleRoute';
 
 const ProtectedRoute = ({ children }) => {
   const { user, isLoading } = useAuth();
+  const location = useLocation();
+
   if (isLoading) return <div className="flex h-screen items-center justify-center bg-background text-muted">Loading session...</div>;
   if (!user) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate replace to="/auth"/>;
   }
+
+  // Forced Password Rotation Interceptor
+  if (user.requires_password_change) {
+    if (location.pathname !== '/update-password') {
+      return <Navigate replace to="/update-password"/>;
+    }
+  }
+
+  // Legacy User Interceptor
+  if (user.role === 'patient' && (!user.gender || !user.nationality)) {
+    if (location.pathname !== '/complete-profile') {
+      return <Navigate replace to="/complete-profile"/>;
+    }
+  }
+
   return children;
 };
 
 const StrictRoleGuard = ({ children }) => {
-  const { user } = useAuth();
-  if (user && user.role === 'therapist') return <Navigate replace to="/therapist/dashboard" />;
-  if (user && user.role === 'admin') return <Navigate replace to="/admin/dashboard" />;
-  return children;
+  const { user, loading } = useAuth();
+  if (loading) return null;
+  
+  if (user?.role === 'therapist') return <Navigate replace to="/therapist/dashboard" />;
+  if (user?.role === 'admin') return <Navigate replace to="/admin/dashboard" />;
+  if (user?.role === 'clinical_admin') return <Navigate replace to="/clinical/dashboard" />;
+  
+  return children; // Patients and unauthenticated users pass through
 };
 
 const ProfileRouter = () => {
   const { user } = useAuth();
-  if (user?.role === 'therapist') return <TherapistProfile />;
-  return <PatientProfile />;
+  
+  if (user?.role === 'therapist') return <TherapistProfile/>;
+  if (user?.role === 'admin') return <Navigate replace to="/admin/dashboard"/>;
+  if (user?.role === 'clinical_admin') return <Navigate replace to="/admin/clinical"/>;
+  
+  return <PatientProfile/>;
 };
 
 const App = () => {
@@ -72,16 +99,17 @@ const App = () => {
             {/* Isolated Auth Routes */}
             <Route element={<AuthLayout />}>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/therapist/auth" element={<TherapistAuth />} />
-              <Route path="/admin/login" element={<AdminAuth />} />
+              <Route path="/provider/auth" element={<ProviderAuth />} />
+              <Route path="/update-password" element={<ProtectedRoute><ForcePasswordReset /></ProtectedRoute>} />
             </Route>
+
+            <Route path="/complete-profile" element={<ProtectedRoute><ProfileCompletion /></ProtectedRoute>} />
 
             {/* Public Marketing & Info Routes */}
             <Route element={<MainLayout />}>
               <Route path="/" element={<StrictRoleGuard><Home /></StrictRoleGuard>} />
               <Route path="/about" element={<StrictRoleGuard><About /></StrictRoleGuard>} />
               <Route path="/resources" element={<StrictRoleGuard><Resources /></StrictRoleGuard>} />
-              <Route path="/therapists" element={<StrictRoleGuard><Therapists /></StrictRoleGuard>} />
               <Route path="/privacy" element={<PrivacyPolicy />} />
               <Route path="/terms" element={<TermsOfService />} />
             </Route>
@@ -89,6 +117,7 @@ const App = () => {
             {/* Patient Clinical Dashboard Routes */}
             <Route element={<DashboardLayout />}>
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/intake" element={<ProtectedRoute><TherapyIntake /></ProtectedRoute>} />
               <Route path="/screenings" element={<ProtectedRoute><Screenings /></ProtectedRoute>} />
               <Route path="/breathing" element={<ProtectedRoute><GuidedBreathing /></ProtectedRoute>} />
               <Route path="/cognitive-reframing" element={<ProtectedRoute><CognitiveReframing /></ProtectedRoute>} />
@@ -104,12 +133,14 @@ const App = () => {
 
             {/* Therapist & Admin Dashboards */}
             <Route element={<DashboardLayout />}>
-              <Route path="/therapist/dashboard" element={<RoleRoute allowedRole="therapist" redirectTo="/therapist/auth"><TherapistDashboard /></RoleRoute>} />
-              <Route path="/therapist/history" element={<RoleRoute allowedRole="therapist" redirectTo="/therapist/auth"><SessionHistory /></RoleRoute>} />
-              <Route path="/therapist/patient/:patientId" element={<RoleRoute allowedRole="therapist" redirectTo="/therapist/auth"><PatientNotes /></RoleRoute>} />
+              <Route path="/therapist/dashboard" element={<RoleRoute allowedRole="therapist" redirectTo="/provider/auth"><TherapistDashboard /></RoleRoute>} />
+              <Route path="/therapist/history" element={<RoleRoute allowedRole="therapist" redirectTo="/provider/auth"><SessionHistory /></RoleRoute>} />
+              <Route path="/therapist/patient/:patientId" element={<RoleRoute allowedRole="therapist" redirectTo="/provider/auth"><PatientNotes /></RoleRoute>} />
               
-              <Route path="/admin/dashboard" element={<RoleRoute allowedRole="admin" redirectTo="/admin/login"><AdminDashboard /></RoleRoute>} />
+              <Route path="/admin/dashboard" element={<RoleRoute allowedRole="admin" redirectTo="/provider/auth"><AdminDashboard /></RoleRoute>} />
+              <Route path="/admin/clinical" element={<RoleRoute allowedRole="clinical_admin" redirectTo="/provider/auth"><ClinicalAdminDashboard /></RoleRoute>} />
             </Route>
+            <Route path="*" element={<Navigate replace to="/" />} />
           </Routes>
         </BrowserRouter>
       </SocketProvider>
